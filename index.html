@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桌面宠物</title>
+    <link rel="stylesheet" href="styles/pet.css">
+</head>
+<body>
+    <div id="pet-container">
+        <div id="pet" class="pet idle">
+            <!-- 宠物精灵图容器 -->
+            <div class="pet-sprite"></div>
+            
+            <!-- 宠物状态指示器 -->
+            <div class="status-indicator">
+                <div class="mood-bar">
+                    <div class="mood-fill" id="mood-fill"></div>
+                </div>
+                <span class="status-text" id="status-text">待机中...</span>
+            </div>
+            
+            <!-- 对话气泡 -->
+            <div class="speech-bubble" id="speech-bubble" style="display: none;">
+                <span class="speech-text" id="speech-text">你好！我是你的桌面宠物~</span>
+                <div class="speech-arrow"></div>
+            </div>
+        </div>
+        
+        <!-- 右键菜单 -->
+        <div id="context-menu" class="context-menu" style="display: none;">
+            <ul>
+                <li onclick="switchToIdle()">💭 待机状态</li>
+                <li onclick="switchToExcited()">🎉 兴奋状态</li>
+                <li onclick="switchToSleeping()">😴 睡觉状态</li>
+                <li class="separator"></li>
+                <li onclick="showSettings()">⚙️ 设置</li>
+                <li onclick="hidePet()">👁️ 隐藏</li>
+                <li onclick="quitApp()">❌ 退出</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="scripts/pet-behavior.js"></script>
+    <script src="scripts/pet-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+let mainWindow;
+let tray;
+
+function createWindow() {
+  // 创建主窗口
+  mainWindow = new BrowserWindow({
+    width: 250,
+    height: 250,
+    frame: false, // 无边框窗口
+    transparent: true, // 透明背景
+    alwaysOnTop: true, // 始终在最前面
+    resizable: false, // 不可调整大小
+    skipTaskbar: true, // 不在任务栏显示
+    show: false, // 初始不显示，避免闪烁
+    hasShadow: false, // 去除窗口阴影
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      webSecurity: false, // 允许加载本地资源
+      experimentalFeatures: true
+    }
+  });
+
+  // 加载宠物界面
+  mainWindow.loadFile('index.html');
+
+  // 等待页面加载完成后显示窗口
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
+
+  // 设置窗口可点击穿透（可选）
+  mainWindow.setIgnoreMouseEvents(false);
+
+  // 开发模式下打开开发者工具
+  if (process.argv.includes('--dev')) {
+    mainWindow.webContents.openDevTools();
+  }
+
+  // 当窗口关闭时
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  // 创建系统托盘
+  createTray();
+}
+
+function createTray() {
+  // 创建托盘图标
+  try {
+    const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+    console.log('尝试加载托盘图标:', iconPath);
+    
+    // 检查文件是否存在
+    if (fs.existsSync(iconPath)) {
+      tray = new Tray(iconPath);
+      console.log('托盘图标加载成功');
+    } else {
+      console.log('图标文件不存在，使用系统默认图标');
+      // 创建一个16x16的空图标
+      const emptyIcon = nativeImage.createEmpty();
+      tray = new Tray(emptyIcon);
+    }
+  } catch (error) {
+    console.log('托盘图标加载失败，使用备用方案:', error.message);
+    // 备用方案：创建一个简单的图标
+    try {
+      // 在Windows上使用系统默认图标
+      const emptyIcon = nativeImage.createEmpty();
+      tray = new Tray(emptyIcon);
+    } catch (fallbackError) {
+      console.error('无法创建托盘图标:', fallbackError.message);
+      return; // 如果无法创建托盘，直接返回
+    }
+  }
+  
+  // 只有成功创建托盘时才设置菜单和事件
+  if (!tray) {
+    console.log('托盘创建失败，跳过托盘功能');
+    return;
+  }
+  
+  // 设置托盘菜单
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示宠物',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus(); // 确保窗口获得焦点
+          console.log('从托盘显示窗口');
+        }
+      }
+    },
+    {
+      label: '隐藏宠物',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.hide();
+          console.log('从托盘隐藏窗口');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '退出',
+      click: () => {
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setContextMenu(contextMenu);
+  tray.setToolTip('桌面宠物');
+  
+  // 双击托盘图标显示/隐藏窗口
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+        console.log('双击托盘隐藏窗口');
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+        console.log('双击托盘显示窗口');
+      }
+    }
+  });
+  
+  // 单击托盘图标也可以显示窗口
+  tray.on('click', () => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
+      console.log('单击托盘显示窗口');
+    }
+  });
+}
+
+// 当 Electron 完成初始化时创建窗口
+app.whenReady().then(createWindow);
+
+// 当所有窗口关闭时退出应用 (macOS 除外)
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// 当应用激活时创建窗口 (macOS)
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+// IPC 通信处理
+ipcMain.on('move-window', (event, x, y) => {
+  if (mainWindow) {
+    mainWindow.setPosition(x, y);
+  }
+});
+
+ipcMain.on('quit-app', () => {
+  console.log('接收到退出信号');
+  app.quit();
+});
+
+ipcMain.on('hide-window', () => {
+  if (mainWindow) {
+    mainWindow.hide();
+    console.log('接收到隐藏信号，窗口已隐藏');
+  }
+});
