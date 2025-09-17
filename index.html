@@ -12,10 +12,18 @@
             <!-- 宠物精灵图容器 -->
             <div class="pet-sprite"></div>
             
+            <!-- 睡眠指示器 -->
+            <div class="sleep-indicator" id="sleep-indicator" style="display: none;">
+                <span class="zzz-text">zzZ</span>
+            </div>
+            
             <!-- 宠物状态指示器 -->
             <div class="status-indicator">
                 <div class="mood-bar">
                     <div class="mood-fill" id="mood-fill"></div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energy-fill"></div>
                 </div>
                 <span class="status-text" id="status-text">待机中...</span>
             </div>
@@ -30,11 +38,14 @@
         <!-- 右键菜单 -->
         <div id="context-menu" class="context-menu" style="display: none;">
             <ul>
-                <li onclick="switchToIdle()">💭 待机状态</li>
-                <li onclick="switchToExcited()">🎉 兴奋状态</li>
-                <li onclick="switchToSleeping()">😴 睡觉状态</li>
+                <li onclick="switchToIdle()">💭 待机</li>
+                <li onclick="switchToExcited()">🎉 兴奋</li>
+                <li onclick="switchToSleeping()">😴 睡觉</li>
                 <li class="separator"></li>
-                <li onclick="showSettings()">⚙️ 设置</li>
+                <li onclick="checkEnergyStatus()">⚡ 能量</li>
+                <li onclick="wakeUpPet()">🐱 唤醒</li>
+                <li class="separator"></li>
+                <li onclick="showSettings()">📊 信息</li>
                 <li onclick="hidePet()">👁️ 隐藏</li>
                 <li onclick="quitApp()">❌ 退出</li>
             </ul>

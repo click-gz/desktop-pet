@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -55,18 +55,45 @@ function createTray() {
   // 创建托盘图标
   try {
     const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+    const pngIconPath = path.join(__dirname, 'assets', 'icon.png');
     console.log('尝试加载托盘图标:', iconPath);
     
-    // 检查文件是否存在
+    let trayIcon = null;
+    
+    // 首先尝试加载 ICO 文件
     if (fs.existsSync(iconPath)) {
-      tray = new Tray(iconPath);
-      console.log('托盘图标加载成功');
-    } else {
-      console.log('图标文件不存在，使用系统默认图标');
-      // 创建一个16x16的空图标
-      const emptyIcon = nativeImage.createEmpty();
-      tray = new Tray(emptyIcon);
+      const icon = nativeImage.createFromPath(iconPath);
+      if (!icon.isEmpty()) {
+        trayIcon = icon;
+        console.log('ICO 图标加载成功');
+      }
     }
+    
+    // 如果 ICO 失败，尝试加载 PNG 文件
+    if (!trayIcon && fs.existsSync(pngIconPath)) {
+      const pngIcon = nativeImage.createFromPath(pngIconPath);
+      if (!pngIcon.isEmpty()) {
+        trayIcon = pngIcon;
+        console.log('PNG 图标加载成功');
+      }
+    }
+    
+    // 如果两个文件都失败，创建一个程序化生成的图标
+    if (!trayIcon) {
+      console.log('图标文件加载失败，创建程序化图标');
+      // 创建一个 16x16 的简单图标
+      const canvas = nativeImage.createEmpty();
+      // 尝试创建一个基本的系统兼容图标
+      trayIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFYSURBVDiNpZM9SwNBEIafgxCwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGw==');
+      if (trayIcon.isEmpty()) {
+        // 最后的备用方案：创建一个完全空的图标
+        trayIcon = nativeImage.createEmpty();
+      }
+    }
+    
+    // 创建托盘
+    tray = new Tray(trayIcon);
+    console.log('托盘创建成功');
   } catch (error) {
     console.log('托盘图标加载失败，使用备用方案:', error.message);
     // 备用方案：创建一个简单的图标
@@ -194,9 +221,30 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
+// 获取当前窗口位置
+ipcMain.handle('get-window-position', () => {
+  if (mainWindow) {
+    const [x, y] = mainWindow.getPosition();
+    return { x, y };
+  }
+  return { x: 0, y: 0 };
+});
+
+// 获取全局鼠标位置
+ipcMain.handle('get-cursor-position', () => {
+  try {
+    const point = screen.getCursorScreenPoint();
+    return { x: point.x, y: point.y };
+  } catch (error) {
+    console.error('获取鼠标位置失败:', error);
+    return null;
+  }
+});
+
+// 隐藏窗口
 ipcMain.on('hide-window', () => {
   if (mainWindow) {
     mainWindow.hide();
-    console.log('接收到隐藏信号，窗口已隐藏');
+    console.log('接收到隐藏窗口信号，窗口已隐藏');
   }
 });

@@ -161,9 +161,71 @@ function switchToExcited() {
 }
 
 function showSettings() {
-    showNotification('⚙️ 设置功能开发中...');
-    // 可以在这里添加设置窗口的逻辑
-    // 比如打开一个新的模态窗口来配置宠物设置
+    if (window.desktopPet) {
+        const energy = window.desktopPet.energy;
+        const mood = window.desktopPet.mood;
+        const state = window.desktopPet.state;
+        
+        showNotification(`📊 状态: ${state} | 能量: ${Math.round(energy)}% | 心情: ${Math.round(mood)}%`, 5000);
+    } else {
+        showNotification('⚙️ 设置功能开发中...');
+    }
+}
+
+// 唤醒宠物功能
+function wakeUpPet() {
+    if (window.desktopPet) {
+        if (window.desktopPet.state === 'sleeping') {
+            window.desktopPet.wakeUpFromSleep();
+            showNotification('🐱 尝试唤醒宠物...');
+        } else {
+            showNotification('😊 宠物已经醒着呢！');
+        }
+    }
+}
+
+// 查看能量状态
+function checkEnergyStatus() {
+    if (window.desktopPet) {
+        const energy = window.desktopPet.energy;
+        const state = window.desktopPet.state;
+        const decayRate = window.desktopPet.energyDecayRates[state] || 0;
+        const decayRatePerMinute = (decayRate * 60 * 1000).toFixed(1);
+        
+        let statusMessage = '';
+        let timeToEmpty = '';
+        
+        if (energy <= 0) {
+            statusMessage = '🔴 能量耗尽！必须睡觉恢复';
+        } else if (energy <= 5) {
+            statusMessage = '🔴 能量极低，即将耗尽';
+        } else if (energy <= 15) {
+            statusMessage = '🟠 能量很低，需要休息';
+        } else if (energy <= 30) {
+            statusMessage = '🟡 能量低，建议休息';
+        } else if (energy <= 60) {
+            statusMessage = '🟡 能量中等';
+        } else {
+            statusMessage = '🟢 能量充满！';
+        }
+        
+        // 计算剩余时间
+        if (decayRate > 0 && energy > 0) {
+            const minutesToEmpty = energy / (decayRate * 60 * 1000);
+            const hours = Math.floor(minutesToEmpty / 60);
+            const minutes = Math.floor(minutesToEmpty % 60);
+            
+            if (hours > 0) {
+                timeToEmpty = ` (剩余: ${hours}小时${minutes}分钟)`;
+            } else {
+                timeToEmpty = ` (剩余: ${minutes}分钟)`;
+            }
+        }
+        
+        const consumptionInfo = decayRate > 0 ? `\n消耗率: ${decayRatePerMinute}%/分钟${timeToEmpty}` : '';
+        
+        showNotification(`⚡ 能量: ${Math.round(energy)}%\n${statusMessage}${consumptionInfo}`, 6000);
+    }
 }
 
 function hidePet() {

@@ -4,8 +4,8 @@
   "description": "一个可爱的桌面宠物应用",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "chcp 65001 && electron .",
+    "dev": "chcp 65001 && electron . --dev",
     "build": "electron-builder"
   },
   "keywords": ["electron", "desktop-pet", "cute"],
