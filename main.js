@@ -161,9 +161,31 @@ app.on('activate', () => {
 });
 
 // IPC 通信处理
+let moveThrottleTimeout = null;
+let pendingPosition = null;
+let lastSetPosition = null;
+
 ipcMain.on('move-window', (event, x, y) => {
   if (mainWindow) {
-    mainWindow.setPosition(x, y);
+    // 检查是否为重复位置，避免不必要的移动
+    if (lastSetPosition && lastSetPosition.x === x && lastSetPosition.y === y) {
+      return;
+    }
+    
+    // 存储最新的位置
+    pendingPosition = { x, y };
+    
+    // 使用节流限制移动频率
+    if (!moveThrottleTimeout) {
+      moveThrottleTimeout = setTimeout(() => {
+        if (pendingPosition && mainWindow) {
+          mainWindow.setPosition(pendingPosition.x, pendingPosition.y);
+          lastSetPosition = { x: pendingPosition.x, y: pendingPosition.y };
+          pendingPosition = null;
+        }
+        moveThrottleTimeout = null;
+      }, 16); // 约60fps
+    }
   }
 });
 

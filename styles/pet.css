@@ -16,6 +16,15 @@ body {
     /* 隐藏滚动条 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* Internet Explorer 10+ */
+    /* 优化渲染性能 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 防止渲染问题 */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    /* 禁用选中和拖拽 */
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
 }
 
 /* 隐藏WebKit浏览器的滚动条 */
@@ -31,6 +40,16 @@ body::-webkit-scrollbar {
     cursor: pointer;
     /* 确保容器不显示滚动条 */
     overflow: hidden;
+    /* 添加硬件加速 */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    /* 避免重绘 */
+    contain: layout style paint;
+    /* 禁用选中 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* 宠物主体 */
@@ -41,8 +60,15 @@ body::-webkit-scrollbar {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    transition: all 0.3s ease;
-    /* 去除-webkit-app-region: drag，防止阻止右键菜单 */
+    /* 移除transition，改为JavaScript控制 */
+    cursor: move;
+    /* GPU硬件加速优化 */
+    will-change: transform;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    /* 强制GPU合成层 */
+    z-index: 1;
 }
 
 /* 宠物精灵图 */
@@ -54,6 +80,21 @@ body::-webkit-scrollbar {
     position: relative;
     animation: breathe 2s ease-in-out infinite;
     box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    /* 解决双重影子问题 */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* 防止模糊 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 确保渲染边界 */
+    contain: layout style paint;
+    /* 禁用鼠标事件以避免干扰拖拽 */
+    pointer-events: none;
+    /* 防止动画与拖拽冲突 */
+    animation-fill-mode: both;
+    will-change: transform, opacity;
 }
 
 /* 宠物表情 */
@@ -85,8 +126,14 @@ body::-webkit-scrollbar {
 
 /* 呼吸动画 */
 @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    0%, 100% { 
+        transform: scale(1) translateZ(0);
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.05) translateZ(0);
+        opacity: 0.9;
+    }
 }
 
 /* 眨眼动画 */
