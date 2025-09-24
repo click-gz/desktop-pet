@@ -50,6 +50,8 @@ body::-webkit-scrollbar {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    /* 确保背景完全透明 */
+    background: transparent !important;
 }
 
 /* 宠物主体 */
@@ -69,6 +71,8 @@ body::-webkit-scrollbar {
     -webkit-font-smoothing: antialiased;
     /* 强制GPU合成层 */
     z-index: 1;
+    /* 确保背景完全透明 */
+    background: transparent !important;
 }
 
 /* 宠物精灵图 */
@@ -416,5 +420,79 @@ body::-webkit-scrollbar {
     .pet-sprite::before {
         font-size: 12px;
         letter-spacing: 6px;
+    }
+}
+
+/* electron-drag 专用拖拽优化样式 - 简洁版本 */
+.pet.dragging {
+    /* 基础性能优化 */
+    will-change: transform;
+    /* 消除动画残影 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* 强制硬件加速 */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    /* 移除所有动画和过渡 */
+    transition: none !important;
+    animation: none !important;
+    /* 禁用触摸操作 */
+    touch-action: none;
+    /* 禁用默认拖拽 */
+    -webkit-user-drag: none;
+    user-drag: none;
+    /* electron-drag 特有优化 */
+    -webkit-app-region: no-drag;
+    pointer-events: auto;
+    cursor: grabbing !important;
+}
+
+.pet.dragging .pet-sprite {
+    /* 移除所有拖拽视觉效果，保持原样 */
+    animation: none !important;
+    transition: none !important;
+    /* 禁用所有子元素的过渡 */
+    pointer-events: none;
+}
+
+/* 拖拽时禁用表情动画 */
+.pet.dragging .pet-sprite::before,
+.pet.dragging .pet-sprite::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* 拖拽时的指针样式 */
+.pet {
+    /* 默认指针样式 */
+    cursor: move;
+    /* 支持Pointer Events */
+    touch-action: none;
+}
+
+.pet:active {
+    cursor: grabbing;
+}
+
+/* 高DPI显示优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .pet.dragging .pet-sprite {
+        /* 高分辨率下的清晰度优化 */
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* 移动设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .pet {
+        /* 移动设备上的触摸优化 */
+        cursor: default;
+    }
+    
+    .pet.dragging .pet-sprite {
+        /* 移动设备上的视觉反馈 */
+        transform: scale(1.12) translateZ(0);
+        filter: brightness(1.2) drop-shadow(0 0 20px rgba(56, 189, 248, 0.6));
     }
 }

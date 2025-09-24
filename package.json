@@ -8,7 +8,11 @@
     "dev": "chcp 65001 && electron . --dev",
     "build": "electron-builder"
   },
-  "keywords": ["electron", "desktop-pet", "cute"],
+  "keywords": [
+    "electron",
+    "desktop-pet",
+    "cute"
+  ],
   "author": "User",
   "license": "MIT",
   "devDependencies": {
@@ -25,5 +29,11 @@
       "**/*",
       "!node_modules/**/*"
     ]
+  },
+  "dependencies": {
+    "electron": "^38.1.2",
+    "electron-drag": "^2.0.0",
+    "interact.js": "^1.2.8",
+    "interactjs": "^1.10.27"
   }
 }

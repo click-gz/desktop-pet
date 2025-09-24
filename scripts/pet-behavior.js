@@ -89,158 +89,8 @@ class DesktopPet {
             }
         });
         
-        // 手动实现拖拽功能
-        let dragStart = null;
-        let isDraggingWindow = false;
-        let lastWindowPosition = { x: 0, y: 0 };
-        let animationFrameId = null;
-        let pendingMove = null;
-        
-        this.pet.addEventListener('mousedown', (e) => {
-            // 只处理左键按下
-            if (e.button === 0) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                dragStart = { x: e.clientX, y: e.clientY };
-                // 记录当前窗口位置
-                lastWindowPosition = {
-                    x: window.screenX || 0,
-                    y: window.screenY || 0
-                };
-                this.isDragging = false;
-                isDraggingWindow = false;
-                
-                // 立即禁用所有过渡动画和动画效果
-                this.pet.style.transition = 'none';
-                this.pet.style.animation = 'none';
-                this.pet.querySelector('.pet-sprite').style.animation = 'none';
-                
-                // 设置拖拽样式
-                this.pet.style.cursor = 'grabbing';
-                document.body.style.cursor = 'grabbing';
-                document.body.style.userSelect = 'none';
-            }
-        });
-        
-        // 优化的mousemove处理
-        const handleMouseMove = (e) => {
-            if (!dragStart || !(e.buttons & 1)) return; // 检查左键是否仍然按下
-            
-            const distance = Math.sqrt(
-                Math.pow(e.clientX - dragStart.x, 2) + 
-                Math.pow(e.clientY - dragStart.y, 2)
-            );
-            
-            if (distance > 2) { // 更低的触发阈值
-                this.isDragging = true;
-                isDraggingWindow = true;
-                
-                // 计算新位置
-                const deltaX = e.clientX - dragStart.x;
-                const deltaY = e.clientY - dragStart.y;
-                const newX = lastWindowPosition.x + deltaX;
-                const newY = lastWindowPosition.y + deltaY;
-                
-                // 存储待处理的移动
-                pendingMove = { x: newX, y: newY };
-                
-                // 如果没有正在进行的动画帧，则开始新的
-                if (!animationFrameId) {
-                    const performMove = () => {
-                        if (pendingMove && typeof require !== 'undefined') {
-                            const { ipcRenderer } = require('electron');
-                            ipcRenderer.send('move-window', pendingMove.x, pendingMove.y);
-                            pendingMove = null;
-                        }
-                        animationFrameId = null;
-                        
-                        // 如果还有待处理的移动，继续下一帧
-                        if (pendingMove) {
-                            animationFrameId = requestAnimationFrame(performMove);
-                        }
-                    };
-                    animationFrameId = requestAnimationFrame(performMove);
-                }
-            }
-        };
-        
-        document.addEventListener('mousemove', handleMouseMove, { passive: false });
-        
-        document.addEventListener('mouseup', (e) => {
-            if (e.button === 0) { // 左键释放
-                dragStart = null;
-                isDraggingWindow = false;
-                
-                // 取消任何待处理的动画帧
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                pendingMove = null;
-                
-                // 恢复样式和动画
-                this.pet.style.cursor = 'move';
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
-                
-                // 立即标记拖拽结束，防止颤动
-                this.isDragging = false;
-                
-                // 延迟恢复动画，确保拖拽完全停止
-                setTimeout(() => {
-                    if (!this.isDragging && !isDraggingWindow) {
-                        // 先恢复transform，再恢复动画
-                        this.pet.style.transition = 'none';
-                        // 强制重绘
-                        this.pet.offsetHeight;
-                        
-                        // 然后添加平滑的过渡
-                        this.pet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                        
-                        // 最后恢复动画
-                        setTimeout(() => {
-                            if (!this.isDragging) {
-                                this.pet.style.animation = '';
-                                this.pet.querySelector('.pet-sprite').style.animation = 'breathe 2s ease-in-out infinite';
-                            }
-                        }, 100);
-                    }
-                }, 50);
-            }
-        });
-        
-        // 处理鼠标离开窗口的情况
-        document.addEventListener('mouseleave', () => {
-            if (isDraggingWindow) {
-                // 模拟mouseup事件
-                dragStart = null;
-                isDraggingWindow = false;
-                
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                pendingMove = null;
-                
-                // 立即标记拖拽结束
-                this.isDragging = false;
-                
-                // 恢复样式
-                this.pet.style.cursor = 'move';
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
-                
-                // 稳定地恢复动画
-                setTimeout(() => {
-                    this.pet.style.transition = 'none';
-                    this.pet.offsetHeight; // 强制重绘
-                    this.pet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                    this.pet.style.animation = '';
-                    this.pet.querySelector('.pet-sprite').style.animation = 'breathe 2s ease-in-out infinite';
-                }, 100);
-            }
-        });
+        // 使用 Pointer Events + rAF 实现丝滑拖拽
+        this.initPointerDragSystem();
         
         // 悬停显示状态
         this.pet.addEventListener('mouseenter', () => {
@@ -251,6 +101,154 @@ class DesktopPet {
         
         // 移除所有自动行为功能
     }
+    
+    // 使用 Pointer Events + requestAnimationFrame 实现丝滑拖拽
+    initPointerDragSystem() {
+        const self = this;
+        const petEl = this.pet;
+        let ipcRenderer = null;
+        try {
+            if (typeof require !== 'undefined') {
+                ipcRenderer = require('electron').ipcRenderer;
+            }
+        } catch (e) {
+            ipcRenderer = null;
+        }
+        
+        let dragFrame = null;
+        let dragging = false;
+        let startCursor = { x: 0, y: 0 };
+        let startWindow = { x: 0, y: 0 };
+        let pendingPos = { x: 0, y: 0 };
+        const windowSize = { w: 250, h: 250 }; // 与主窗口一致
+        
+        function onPointerDown(e) {
+            // 仅左键或触摸
+            if (e.button !== undefined && e.button !== 0) return;
+            dragging = true;
+            self.isDragging = true;
+            self.lastInteractionTime = Date.now();
+            
+            // 禁用选择和动画，设置样式
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+            petEl.classList.add('dragging');
+            const sprite = petEl.querySelector('.pet-sprite');
+            if (sprite) sprite.style.animation = 'none';
+            petEl.style.transition = 'none';
+            
+            // 捕获指针
+            try { petEl.setPointerCapture(e.pointerId); } catch (_) {}
+            
+            // 记录起始数据
+            const screenX = (window.screenX || window.screenLeft || 0) + e.clientX;
+            const screenY = (window.screenY || window.screenTop || 0) + e.clientY;
+            startCursor.x = screenX;
+            startCursor.y = screenY;
+            
+            if (ipcRenderer) {
+                const pos = self.position;
+                startWindow.x = pos.x || 0;
+                startWindow.y = pos.y || 0;
+            } else {
+                startWindow.x = 0;
+                startWindow.y = 0;
+            }
+            
+            pendingPos.x = startWindow.x;
+            pendingPos.y = startWindow.y;
+            
+            // 启动rAF循环
+            if (!dragFrame) {
+                const loop = () => {
+                    if (!dragging) { dragFrame = null; return; }
+                    if (ipcRenderer) {
+                        ipcRenderer.send('move-window', pendingPos.x, pendingPos.y);
+                        // 本地记录，减少抖动
+                        self.position.x = pendingPos.x;
+                        self.position.y = pendingPos.y;
+                    }
+                    dragFrame = requestAnimationFrame(loop);
+                };
+                dragFrame = requestAnimationFrame(loop);
+            }
+        }
+        
+        function onPointerMove(e) {
+            if (!dragging) return;
+            const screenX = (window.screenX || window.screenLeft || 0) + e.clientX;
+            const screenY = (window.screenY || window.screenTop || 0) + e.clientY;
+            const dx = screenX - startCursor.x;
+            const dy = screenY - startCursor.y;
+            
+            let nextX = Math.round(startWindow.x + dx);
+            let nextY = Math.round(startWindow.y + dy);
+            
+            // 边界限制
+            const maxX = Math.max(0, window.screen.width - windowSize.w);
+            const maxY = Math.max(0, window.screen.height - windowSize.h);
+            if (isFinite(maxX) && isFinite(maxY)) {
+                nextX = Math.max(0, Math.min(maxX, nextX));
+                nextY = Math.max(0, Math.min(maxY, nextY));
+            }
+            
+            pendingPos.x = nextX;
+            pendingPos.y = nextY;
+        }
+        
+        function endDrag() {
+            if (!dragging) return;
+            dragging = false;
+            self.isDragging = false;
+            petEl.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            
+            // 平滑恢复动画
+            requestAnimationFrame(() => {
+                petEl.style.transition = 'transform 0.2s ease-out';
+                const sprite = petEl.querySelector('.pet-sprite');
+                setTimeout(() => {
+                    if (!self.isDragging && sprite) {
+                        petEl.style.animation = '';
+                        sprite.style.animation = 'breathe 2s ease-in-out infinite';
+                    }
+                }, 200);
+            });
+        }
+        
+        function onPointerUp(e) {
+            try { petEl.releasePointerCapture(e.pointerId); } catch (_) {}
+            endDrag();
+        }
+        
+        // 注册事件
+        petEl.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+        
+        // 存储清理函数
+        this.dragSystem = {
+            destroy() {
+                petEl.removeEventListener('pointerdown', onPointerDown);
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                window.removeEventListener('pointercancel', onPointerUp);
+                if (dragFrame) {
+                    cancelAnimationFrame(dragFrame);
+                    dragFrame = null;
+                }
+                if (self.isDragging) {
+                    self.isDragging = false;
+                    petEl.classList.remove('dragging');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            }
+        };
+    }
+
     
     // 初始化窗口位置
     async initializePosition() {
@@ -939,6 +937,33 @@ class DesktopPet {
     }
     
     // ==================== 能量系统结束 ==================== //
+    
+    // 清理方法（用于组件销毁）
+    destroy() {
+        // 清理能量系统
+        this.isEnergySystemActive = false;
+        this.clearEnergyDecay();
+        this.clearSleepRecovery();
+        this.clearExcitedMoveTimer();
+        
+        // 清理拖拽系统
+        if (this.dragSystem) {
+            this.dragSystem.destroy();
+            this.dragSystem = null;
+        }
+        
+        // 清理DOM引用
+        this.pet = null;
+        this.container = null;
+        this.statusText = null;
+        this.moodFill = null;
+        this.energyFill = null;
+        this.speechBubble = null;
+        this.speechText = null;
+        this.sleepIndicator = null;
+        
+        console.log('桌面宠物系统已清理');
+    }
     
     // 已移除updateStats功能
 }

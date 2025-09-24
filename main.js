@@ -206,8 +206,21 @@ ipcMain.on('move-window', (event, x, y) => {
     if (!moveThrottleTimeout) {
       moveThrottleTimeout = setTimeout(() => {
         if (pendingPosition && mainWindow) {
-          mainWindow.setPosition(pendingPosition.x, pendingPosition.y);
-          lastSetPosition = { x: pendingPosition.x, y: pendingPosition.y };
+          // 验证位置参数是否为有效数字
+          const posX = Math.round(Number(pendingPosition.x));
+          const posY = Math.round(Number(pendingPosition.y));
+          
+          if (isFinite(posX) && isFinite(posY)) {
+            try {
+              mainWindow.setPosition(posX, posY);
+              lastSetPosition = { x: posX, y: posY };
+            } catch (error) {
+              console.warn('设置窗口位置失败:', error, '位置:', posX, posY);
+            }
+          } else {
+            console.warn('无效的窗口位置参数:', pendingPosition);
+          }
+          
           pendingPosition = null;
         }
         moveThrottleTimeout = null;
