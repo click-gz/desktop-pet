@@ -161,12 +161,10 @@ function switchToExcited() {
 }
 
 function showSettings() {
-    if (window.desktopPet) {
-        const energy = window.desktopPet.energy;
-        const mood = window.desktopPet.mood;
-        const state = window.desktopPet.state;
+    if (window.desktopPet && window.desktopPet.stateManager) {
+        const state = window.desktopPet.stateManager.getState();
         
-        showNotification(`📊 状态: ${state} | 能量: ${Math.round(energy)}% | 心情: ${Math.round(mood)}%`, 5000);
+        showNotification(`📊 状态: ${state.currentState} | 能量: ${Math.round(state.energy)}% | 心情: ${Math.round(state.mood)}%`, 5000);
     } else {
         showNotification('⚙️ 设置功能开发中...');
     }
@@ -174,8 +172,9 @@ function showSettings() {
 
 // 唤醒宠物功能
 function wakeUpPet() {
-    if (window.desktopPet) {
-        if (window.desktopPet.state === 'sleeping') {
+    if (window.desktopPet && window.desktopPet.stateManager) {
+        const state = window.desktopPet.stateManager.getState();
+        if (state.currentState === 'sleeping') {
             window.desktopPet.wakeUpFromSleep();
             showNotification('🐱 尝试唤醒宠物...');
         } else {
@@ -186,32 +185,32 @@ function wakeUpPet() {
 
 // 查看能量状态
 function checkEnergyStatus() {
-    if (window.desktopPet) {
-        const energy = window.desktopPet.energy;
-        const state = window.desktopPet.state;
-        const decayRate = window.desktopPet.energyDecayRates[state] || 0;
+    if (window.desktopPet && window.desktopPet.stateManager) {
+        const state = window.desktopPet.stateManager.getState();
+        const energyConfig = window.desktopPet.stateManager.energyConfig;
+        const decayRate = energyConfig.decayRates[state.currentState] || 0;
         const decayRatePerMinute = (decayRate * 60 * 1000).toFixed(1);
         
         let statusMessage = '';
         let timeToEmpty = '';
         
-        if (energy <= 0) {
+        if (state.energy <= 0) {
             statusMessage = '🔴 能量耗尽！必须睡觉恢复';
-        } else if (energy <= 5) {
+        } else if (state.energy <= 5) {
             statusMessage = '🔴 能量极低，即将耗尽';
-        } else if (energy <= 15) {
+        } else if (state.energy <= 15) {
             statusMessage = '🟠 能量很低，需要休息';
-        } else if (energy <= 30) {
+        } else if (state.energy <= 30) {
             statusMessage = '🟡 能量低，建议休息';
-        } else if (energy <= 60) {
+        } else if (state.energy <= 60) {
             statusMessage = '🟡 能量中等';
         } else {
             statusMessage = '🟢 能量充满！';
         }
         
         // 计算剩余时间
-        if (decayRate > 0 && energy > 0) {
-            const minutesToEmpty = energy / (decayRate * 60 * 1000);
+        if (decayRate > 0 && state.energy > 0) {
+            const minutesToEmpty = state.energy / (decayRate * 60 * 1000);
             const hours = Math.floor(minutesToEmpty / 60);
             const minutes = Math.floor(minutesToEmpty % 60);
             
@@ -224,7 +223,7 @@ function checkEnergyStatus() {
         
         const consumptionInfo = decayRate > 0 ? `\n消耗率: ${decayRatePerMinute}%/分钟${timeToEmpty}` : '';
         
-        showNotification(`⚡ 能量: ${Math.round(energy)}%\n${statusMessage}${consumptionInfo}`, 6000);
+        showNotification(`⚡ 能量: ${Math.round(state.energy)}%\n${statusMessage}${consumptionInfo}`, 6000);
     }
 }
 
@@ -303,8 +302,9 @@ function showNotification(message, duration = 3000) {
 
 // 双击切换宠物状态
 function handleDoubleClick() {
-    if (window.desktopPet) {
-        const currentState = window.desktopPet.state;
+    if (window.desktopPet && window.desktopPet.stateManager) {
+        const state = window.desktopPet.stateManager.getState();
+        const currentState = state.currentState;
         
         switch(currentState) {
             case 'idle':
