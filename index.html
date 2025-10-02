@@ -10,7 +10,15 @@
     <div id="pet-container">
         <div id="pet" class="pet idle">
             <!-- 宠物精灵图容器 -->
-            <div class="pet-sprite"></div>
+            <div class="pet-sprite">
+                <!-- 猫咪面部特征 -->
+                <div class="cat-eyes"></div>
+                <div class="cat-blush"></div>
+                <div class="cat-nose"></div>
+                <div class="cat-mouth"></div>
+                <div class="cat-whiskers"></div>
+                <div class="cat-collar"></div>
+            </div>
             
             <!-- 睡眠指示器 -->
             <div class="sleep-indicator" id="sleep-indicator" style="display: none;">
@@ -41,6 +49,8 @@
                 <li onclick="switchToIdle()">💭 待机</li>
                 <li onclick="switchToExcited()">🎉 兴奋</li>
                 <li onclick="switchToSleeping()">😴 睡觉</li>
+                <li class="separator"></li>
+                <li onclick="openChat()">💬 聊天</li>
                 <li class="separator"></li>
                 <li onclick="checkEnergyStatus()">⚡ 能量</li>
                 <li onclick="wakeUpPet()">🐱 唤醒</li>

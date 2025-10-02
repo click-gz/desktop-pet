@@ -16,24 +16,19 @@
   "author": "User",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^27.0.0",
+    "electron": "^38.1.2",
     "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.example.desktop-pet",
+    "appId": "com.desktop-pet.app",
     "productName": "桌面宠物",
     "directories": {
       "output": "dist"
     },
     "files": [
       "**/*",
-      "!node_modules/**/*"
+      "!node_modules/**/*",
+      "!backend-python/**/*"
     ]
-  },
-  "dependencies": {
-    "electron": "^38.1.2",
-    "electron-drag": "^2.0.0",
-    "interact.js": "^1.2.8",
-    "interactjs": "^1.10.27"
   }
 }

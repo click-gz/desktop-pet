@@ -4,7 +4,7 @@ class PetStateManager {
         // 初始状态
         this.state = {
             // 基础状态
-            currentState: 'idle', // idle, excited, sleeping
+            currentState: 'idle', // idle, excited, sleeping, chatting
             mood: 80,
             energy: 100,
             position: { x: 100, y: 100 },
@@ -43,7 +43,8 @@ class PetStateManager {
             decayRates: {
                 idle: 100 / (60 * 60 * 1000),      // 待机：1小时耗尽
                 excited: 100 / (40 * 60 * 1000),   // 兴奋：40分钟耗尽
-                sleeping: 0                         // 睡眠：不消耗
+                sleeping: 0,                        // 睡眠：不消耗
+                chatting: 100 / (120 * 60 * 1000)  // 聊天：2小时耗尽（消耗很小）
             },
             recoveryAmount: 1, // 每次点击恢复1%能量
             minInteractionInterval: 2000, // 防止过度点击的最小间隔
@@ -55,7 +56,8 @@ class PetStateManager {
         this.behaviorConfig = {
             idle: { duration: 3000, next: ['excited'], name: '💭 待机' },
             excited: { duration: 2500, next: ['idle', 'sleeping'], name: '🎉 兴奋' },
-            sleeping: { duration: 6000, next: ['idle'], name: '😴 睡觉' }
+            sleeping: { duration: 6000, next: ['idle'], name: '😴 睡觉' },
+            chatting: { duration: 0, next: ['idle'], name: '💬 聊天中' }
         };
         
         // 消息配置
@@ -63,6 +65,7 @@ class PetStateManager {
             idle: ['在想什么呢...', '今天天气不错~', '主人在忙什么？', '无聊ing...', '需要做点什么吗？'],
             excited: ['好开心！', '耶！', '太棒了！', '٩(◕‿◕)۶', '好精神！', '感觉充满了力量！'],
             sleeping: ['ZZZ...', '好困...', '做了个好梦', '呼呼...', '在恢复能量...'],
+            chatting: ['有什么想聊的吗？', '我在听~', '继续说吧！', '我在这里呢~', '和你聊天真开心！'],
             greeting: ['你好！', '主人回来了！', '想我了吗？', '欢迎回来~', '很高兴见到你！'],
             tired: ['好累啊...', '需要休息一下', '能量不足...', '感觉要睡着了', '没力气了...'],
             energyLow: ['能量不够了...', '好累啊', '需要休息', '感觉要睡着了', '太累了...', '能量即将耗尽'],
@@ -215,7 +218,7 @@ class PetStateManager {
         const errors = [];
         
         // 验证基础状态
-        if (!['idle', 'excited', 'sleeping'].includes(state.currentState)) {
+        if (!['idle', 'excited', 'sleeping', 'chatting'].includes(state.currentState)) {
             errors.push(`无效的状态: ${state.currentState}`);
         }
         

@@ -84,9 +84,12 @@ class DesktopPet {
             }
         }
         
-        // 处理兴奋状态的特殊行为
+        // 处理兴奋状态的特殊行为（聊天状态下不移动）
         if (newState === 'excited') {
             this.startExcitedMoveTimer();
+        } else if (newState === 'chatting') {
+            // 聊天状态下不移动
+            this.clearExcitedMoveTimer();
         } else {
             this.clearExcitedMoveTimer();
         }
@@ -125,7 +128,8 @@ class DesktopPet {
         this.pet.addEventListener('click', (e) => {
             e.preventDefault();
             const state = this.stateManager.getState();
-            if (!state.isDragging) {
+            // 在聊天模式下，点击不切换状态
+            if (!state.isDragging && state.currentState !== 'chatting') {
                 this.interact();
             }
         });
@@ -165,9 +169,14 @@ class DesktopPet {
         function onPointerDown(e) {
             // 仅左键或触摸
             if (e.button !== undefined && e.button !== 0) return;
+            
+            // 在聊天模式下，允许拖拽但不改变状态
+            const currentState = self.stateManager.getState();
+            const isChatting = currentState.currentState === 'chatting';
+            
             dragging = true;
             
-            // 更新状态管理器
+            // 更新状态管理器（聊天模式下不更新状态）
             self.stateManager.updateState({
                 isDragging: true,
                 lastInteractionTime: Date.now()
@@ -483,6 +492,12 @@ class DesktopPet {
     interact() {
         const currentState = this.stateManager.getState();
         
+        // 在聊天模式下，不响应交互
+        if (currentState.currentState === 'chatting') {
+            console.log('聊天模式下，点击交互被忽略');
+            return;
+        }
+        
         // 更新心情
         const newMood = Math.min(100, currentState.mood + 10);
         this.stateManager.setStateValue('mood', newMood);
@@ -534,7 +549,8 @@ class DesktopPet {
         const stateNames = {
             idle: '💭 待机中',
             excited: '🎉 兴奋中',
-            sleeping: '😴 睡觉中'
+            sleeping: '😴 睡觉中',
+            chatting: '💬 聊天中'
         };
         
         const currentStateName = stateNames[state.currentState] || state.currentState;
@@ -736,8 +752,8 @@ class DesktopPet {
         
         const checkAndMove = () => {
             const state = this.stateManager.getState();
-            if (state.currentState !== 'excited') {
-                return; // 如果不在兴奋状态，停止检查
+            if (state.currentState !== 'excited' || state.currentState === 'chatting') {
+                return; // 如果不在兴奋状态或在聊天状态，停止检查
             }
             
             const timeSinceLastInteraction = Date.now() - state.lastInteractionTime;

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>与宠物聊天</title>
+    <link rel="stylesheet" href="styles/chat.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">
+                <span class="pet-avatar">🐱</span>
+                <span class="chat-title-text">与桌面宠物聊天</span>
+                <span class="connection-status" id="connection-status">
+                    <span class="status-dot offline"></span>
+                    <span class="status-text">检查中...</span>
+                </span>
+            </div>
+            <button class="close-button" onclick="closeChat()">✕</button>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+                <div class="message-avatar">🐱</div>
+                <div class="message-content">
+                    <div class="message-text">你好！我是你的桌面宠物，有什么可以帮你的吗？😊</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="chat-input" 
+                placeholder="输入消息..." 
+                autocomplete="off"
+            />
+            <button class="send-button" id="send-button" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="sendQuickMessage('你好')">👋 打招呼</button>
+            <button class="quick-action-btn" onclick="sendQuickMessage('现在感觉怎么样？')">💭 问候</button>
+            <button class="quick-action-btn" onclick="sendQuickMessage('讲个笑话吧')">😄 笑话</button>
+        </div>
+    </div>
+    
+    <script src="scripts/pet-chat.js"></script>
+</body>
+</html>
+

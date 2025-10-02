@@ -57,77 +57,181 @@ body::-webkit-scrollbar {
 /* 宠物主体 */
 #pet {
     position: absolute;
-    width: 100px;
-    height: 100px;
+    width: 120px; /* 增大整体尺寸 */
+    height: 120px;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    /* 移除transition，改为JavaScript控制 */
     cursor: move;
-    /* GPU硬件加速优化 */
     will-change: transform;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     -webkit-font-smoothing: antialiased;
-    /* 强制GPU合成层 */
     z-index: 1;
-    /* 确保背景完全透明 */
     background: transparent !important;
 }
 
-/* 宠物精灵图 - 优化为配合Web Animations API */
+
+/* 宠物精灵图 - 超萌橙色小猫版本 */
 .pet-sprite {
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, #a5f3fc 15%, #67e8f9 35%, #38bdf8 60%, #0ea5e9 100%);
-    border-radius: 50%;
+    background: linear-gradient(145deg, #307791 0%, #d2d24b 50%, #a2c868af 100%);
+    border-radius: 48% 48% 45% 45%;
     position: relative;
-    /* 移除CSS动画，改为JavaScript控制 */
-    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-    /* 解决双重影子问题 */
+  
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    /* 防止模糊 */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* 确保渲染边界 */
     contain: layout style paint;
-    /* 禁用鼠标事件以避免干扰拖拽 */
     pointer-events: none;
-    /* Web Animations API 优化 */
     will-change: transform, opacity, filter;
-    /* 默认状态 */
     opacity: 1;
+    animation: gentle-sway 3s ease-in-out infinite;
 }
 
-/* 宠物表情 */
+/* 猫咪耳朵 */
 .pet-sprite::before {
-    content: '●    ●';
+    content: '';
     position: absolute;
-    top: 35%;
+    top: -22px;
+    left: 18px;
+    width: 32px;
+    height: 40px;
+    background: linear-gradient(145deg, #FFB366, #FF9933);
+    border-radius: 50% 50% 0 0;
+    transform: rotate(-30deg);
+    box-shadow: 
+        52px 0 0 #FF9933,
+        inset 5px 5px 10px rgba(255, 224, 189, 0.5),
+        inset -5px -5px 10px rgba(255, 140, 0, 0.3);
+    z-index: -1;
+}
+
+/* 猫咪脸部特征 */
+.pet-sprite::after {
+    content: '';
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    width: 28px;
+    height: 16px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #FFE0CC 0%, #FFCCB3 100%);
+    border-radius: 45% 45% 55% 55%;
+    box-shadow: 
+        inset 0 -4px 10px rgba(255, 140, 26, 0.2),
+        0 2px 6px rgba(255, 140, 26, 0.1);
+}
+
+/* 猫咪眼睛 */
+.cat-eyes {
+    position: absolute;
+    top: 40%;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
-    color: #2c2c2c;
-    letter-spacing: 10px;
-    animation: blink 4s infinite;
-    text-align: center;
     width: 100%;
+    text-align: center;
 }
 
-.pet-sprite::after {
-    content: '  ︶  ';
+.cat-eyes::before,
+.cat-eyes::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 26px;
+    background: radial-gradient(circle at 30% 30%, #333 0%, #1a1a1a 70%);
+    border-radius: 50% 50% 50% 50%;
+    animation: blink 4s infinite;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+/* 眼睛的可爱高光 */
+.cat-eyes::before {
+    left: 26%;
+    box-shadow: 
+        inset -3px -3px 6px rgba(0, 0, 0, 0.6),
+        inset 5px 5px 8px rgba(255, 255, 255, 0.9),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: rotate(-3deg);
+}
+
+.cat-eyes::after {
+    right: 26%;
+    box-shadow: 
+        inset -3px -3px 6px rgba(0, 0, 0, 0.6),
+        inset 5px 5px 8px rgba(255, 255, 255, 0.9),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: rotate(3deg);
+}
+
+/* 猫咪可爱腮红 */
+.cat-blush {
+    position: absolute;
+    width: 30px;
+    height: 14px;
+    background: radial-gradient(ellipse at center, rgba(255, 153, 153, 0.5) 0%, transparent 70%);
+    border-radius: 50%;
+    top: 52%;
+    left: 16%;
+    box-shadow: 68px 0 0 rgba(255, 153, 153, 0.5);
+    filter: blur(5px);
+}
+
+
+/* 猫咪可爱嘴巴 */
+.cat-mouth {
+    position: absolute;
+    top: 58%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 9px;
+    border-bottom: 2.5px solid rgba(255, 107, 129, 0.6);
+    border-radius: 50%;
+    filter: drop-shadow(0 0.5px 1px rgba(255, 107, 129, 0.3));
+}
+
+/* 猫咪精致胡须 */
+.cat-whiskers {
     position: absolute;
     top: 55%;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
-    color: #2c2c2c;
-    text-align: center;
-    width: 100%;
+    width: 88px;
+    height: 20px;
 }
+
+.cat-whiskers::before,
+.cat-whiskers::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 1.8px;
+    background: linear-gradient(90deg, rgba(80, 50, 30, 0.45) 0%, rgba(80, 50, 30, 0.25) 100%);
+    transform-origin: 100% 50%;
+    border-radius: 1px;
+}
+
+.cat-whiskers::before {
+    left: 0;
+    box-shadow: 
+        0 -5px 0 rgba(80, 50, 30, 0.35),
+        0 5px 0 rgba(80, 50, 30, 0.35);
+    transform: rotate(8deg);
+}
+
+.cat-whiskers::after {
+    right: 0;
+    box-shadow: 
+        0 -5px 0 rgba(80, 50, 30, 0.35),
+        0 5px 0 rgba(80, 50, 30, 0.35);
+    transform: rotate(-8deg);
+}
+
 
 /* 呼吸动画 */
 @keyframes breathe {
@@ -147,25 +251,256 @@ body::-webkit-scrollbar {
     95% { opacity: 0.1; }
 }
 
-/* 状态颜色 - 保留颜色变化，移除动画 */
+/* 状态样式 */
+/* 兴奋状态 - 活力黄橙色系 */
 .pet.excited .pet-sprite {
-    background: radial-gradient(circle, #ffeaa7 20%, #fdcb6e 40%, #e17055 60%);
+    background: linear-gradient(145deg, #FFD93D 0%, #FFA500 50%, #FF8C00 100%);
+    animation: excited-movement 1.2s ease-in-out infinite;
 }
 
+@keyframes excited-movement {
+    0%, 100% { transform: translateY(0) scale(1); }
+    25% { transform: translateY(-6px) scale(1.02) rotate(-2deg); }
+    75% { transform: translateY(-6px) scale(1.02) rotate(2deg); }
+}
+
+.pet.excited .pet-sprite::before {
+    background: linear-gradient(145deg, #FFD93D, #FFA500);
+    box-shadow: 
+        52px 0 0 #FFA500,
+        inset 5px 5px 10px rgba(255, 255, 255, 0.5),
+        inset -5px -5px 10px rgba(255, 140, 0, 0.4);
+}
+
+.pet.excited .pet-sprite::after {
+    background: linear-gradient(180deg, #FFF4CC 0%, #FFE4B3 100%);
+}
+
+.pet.excited .cat-eyes::before,
+.pet.excited .cat-eyes::after {
+    height: 26px;
+    width: 22px;
+    border-radius: 45% 45% 50% 50%;
+    background: #2A2A2A;
+    box-shadow: 
+        inset -3px -3px 4px rgba(0, 0, 0, 0.4),
+        inset 4px 4px 4px rgba(255, 255, 255, 0.9);
+    animation: excited-eyes 1.5s ease-in-out infinite;
+}
+
+@keyframes excited-eyes {
+    0%, 100% { transform: scale(1) rotate(-5deg); }
+    50% { transform: scale(1.1) rotate(-5deg) translateY(-1px); }
+}
+
+.pet.excited .cat-mouth {
+    width: 18px;
+    height: 12px;
+    border: none;
+    background: transparent;
+}
+
+
+/* 睡眠状态 - 柔和紫蓝色系 */
 .pet.sleeping .pet-sprite {
-    background: radial-gradient(circle, #a8e6cf 20%, #88d8a3 40%, #66bb6a 60%);
+    background: linear-gradient(145deg, #C3B1E1 0%, #a492cb 50%, #8B7AB8 100%);
+    animation: sleeping-breath 4s ease-in-out infinite;
 }
 
 .pet.sleeping .pet-sprite::before {
-    content: '─    ─';
-    letter-spacing: 10px;
-    text-align: center;
-    width: 100%;
+    background: linear-gradient(145deg, #C3B1E1, #9B88C4);
+    box-shadow: 
+        52px 0 0 #9B88C4,
+        inset 5px 5px 10px rgba(255, 255, 255, 0.5),
+        inset -5px -5px 10px rgba(139, 122, 184, 0.4);
 }
 
 .pet.sleeping .pet-sprite::after {
-    /* 移除伪元素的zzZ，改用独立HTML元素 */
-    display: none;
+    background: linear-gradient(180deg, #F5F0FF 0%, #E6DCFF 100%);
+}
+
+@keyframes sleeping-breath {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+.pet.sleeping .cat-eyes::before,
+.pet.sleeping .cat-eyes::after {
+    height: 2px;
+    width: 18px;
+    border-radius: 2px;
+    background: #4A4A4A;
+    box-shadow: none;
+    top: 52%;
+    transform: rotate(0);
+}
+
+
+
+.pet.sleeping .cat-whiskers {
+    opacity: 0.3;
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* 聊天状态 - 可爱粉色系 */
+.pet.chatting .pet-sprite {
+    background: linear-gradient(145deg, #FFD4E5 0%, #FFB3D9 50%, #FF9ACE 100%);
+    animation: chat-movement 2.5s ease-in-out infinite;
+}
+
+.pet.chatting .pet-sprite::before {
+    background: linear-gradient(145deg, #FFD4E5, #FFB3D9);
+    box-shadow: 
+        52px 0 0 #FFB3D9,
+        inset 5px 5px 10px rgba(255, 255, 255, 0.5),
+        inset -5px -5px 10px rgba(255, 154, 206, 0.4);
+}
+
+.pet.chatting .pet-sprite::after {
+    background: linear-gradient(180deg, #FFF5FA 0%, #FFE8F5 100%);
+}
+
+@keyframes chat-movement {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-1deg); }
+    75% { transform: rotate(1deg); }
+}
+
+.pet.chatting .cat-eyes::before,
+.pet.chatting .cat-eyes::after {
+    height: 24px;
+    width: 20px;
+    background: #2A2A2A;
+    border-radius: 48% 48% 52% 52%;
+    box-shadow: 
+        inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+        inset 3px 3px 4px rgba(255, 255, 255, 0.8);
+    animation: chat-eyes 3s ease-in-out infinite;
+}
+
+@keyframes chat-eyes {
+    0%, 100% { transform: scale(1) rotate(-5deg); }
+    50% { transform: scale(1.05) rotate(-5deg) translateY(-1px); }
+}
+
+.pet.chatting .cat-mouth {
+    width: 16px;
+    height: 10px;
+    border: none;
+    overflow: visible;
+}
+
+.pet.chatting .cat-mouth::after {
+    content: '▽';
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #4A4A4A;
+}
+
+/* 低能量状态 */
+.pet-sprite.low-energy {
+    opacity: 0.8;
+    filter: brightness(0.9);
+}
+
+.pet-sprite.very-low-energy {
+    opacity: 0.7;
+    filter: brightness(0.8) grayscale(0.2);
+}
+
+/* 超萌动画效果 */
+@keyframes gentle-sway {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg); 
+    }
+    25% {
+        transform: translateY(-3px) rotate(-1deg);
+    }
+    75% {
+        transform: translateY(-3px) rotate(1deg);
+    }
+}
+
+@keyframes ear-movement {
+    0%, 100% { transform: rotate(-30deg); }
+    30% { transform: rotate(-25deg); }
+    60% { transform: rotate(-32deg); }
+    80% { transform: rotate(-28deg); }
+}
+
+.pet-sprite::before {
+    animation: ear-movement 4s ease-in-out infinite;
+}
+
+@keyframes whiskers-sway {
+    0%, 100% { transform: rotate(8deg); }
+    50% { transform: rotate(6deg); }
+}
+
+.cat-whiskers::before {
+    animation: whiskers-sway 3s ease-in-out infinite;
+}
+
+.cat-whiskers::after {
+    animation: whiskers-sway 3s ease-in-out infinite reverse;
+}
+
+@keyframes subtle-shine {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+.cat-collar {
+    animation: subtle-shine 4s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+    0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+    50% { transform: translateX(-50%) scale(1.1) rotate(180deg); }
+}
+
+.cat-collar::after {
+    animation: star-twinkle 3s ease-in-out infinite;
+}
+
+@keyframes shadow-pulse {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.2; }
+}
+
+.cat-blush {
+    animation: shadow-pulse 4s ease-in-out infinite;
+}
+
+/* 优雅的鼠标悬停效果 */
+.pet:hover .pet-sprite {
+    transform: scale(1.05);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pet:hover .cat-eyes::before,
+.pet:hover .cat-eyes::after {
+    height: 26px;
+    width: 22px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 
+        inset -3px -3px 4px rgba(0, 0, 0, 0.4),
+        inset 4px 4px 4px rgba(255, 255, 255, 0.9);
+}
+
+
+
+.pet:hover .cat-collar::after {
+    animation: star-twinkle 2s ease-in-out infinite;
+}
+
+/* 优雅的点击效果 */
+.pet:active .pet-sprite {
+    transform: scale(0.98);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes float {
@@ -389,7 +724,10 @@ body::-webkit-scrollbar {
 /* 悬停效果 */
 .pet:hover .pet-sprite {
     transform: scale(1.08);
-    box-shadow: 0 7px 20px rgba(255, 107, 107, 0.6);
+    box-shadow: 
+        0 12px 35px rgba(255, 140, 26, 0.6),
+        inset -18px -18px 30px rgba(255, 140, 0, 0.35),
+        inset 18px 18px 30px rgba(255, 224, 189, 0.7);
 }
 
 /* 点击效果 */

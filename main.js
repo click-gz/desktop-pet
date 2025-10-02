@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 let mainWindow;
+let chatWindow;
 let tray;
 
 function createWindow() {
@@ -259,5 +260,76 @@ ipcMain.on('hide-window', () => {
   if (mainWindow) {
     mainWindow.hide();
     console.log('接收到隐藏窗口信号，窗口已隐藏');
+  }
+});
+
+// 创建聊天窗口
+function createChatWindow() {
+  // 如果聊天窗口已存在，则显示并聚焦
+  if (chatWindow) {
+    chatWindow.show();
+    chatWindow.focus();
+    return;
+  }
+
+  // 创建聊天窗口
+  chatWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
+    minWidth: 350,
+    minHeight: 500,
+    frame: true,
+    transparent: false,
+    alwaysOnTop: false,
+    resizable: true,
+    show: false,
+    backgroundColor: '#ffffff',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true
+    }
+  });
+
+  // 加载聊天界面
+  chatWindow.loadFile('chat.html');
+
+  // 等待页面加载完成后显示窗口
+  chatWindow.once('ready-to-show', () => {
+    chatWindow.show();
+    chatWindow.focus();
+  });
+
+  // 开发模式下打开开发者工具
+  if (process.argv.includes('--dev')) {
+    chatWindow.webContents.openDevTools();
+  }
+
+  // 当窗口关闭时
+  chatWindow.on('closed', () => {
+    chatWindow = null;
+    // 通知主窗口退出聊天状态
+    if (mainWindow) {
+      mainWindow.webContents.send('exit-chat-mode');
+    }
+  });
+}
+
+// 打开聊天窗口
+ipcMain.on('open-chat-window', () => {
+  createChatWindow();
+});
+
+// 关闭聊天窗口
+ipcMain.on('close-chat-window', () => {
+  if (chatWindow) {
+    chatWindow.close();
+  }
+});
+
+// 设置宠物状态（从聊天窗口发送）
+ipcMain.on('set-pet-state', (event, state) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('change-pet-state', state);
   }
 });

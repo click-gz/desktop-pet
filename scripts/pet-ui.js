@@ -141,13 +141,27 @@ function petSleep() {
 
 function switchToSleeping() {
     if (window.desktopPet) {
+        closeChatWindowIfOpen(); // 如果聊天窗口打开，先关闭
         window.desktopPet.setState('sleeping');
         showNotification('😴 切换到睡觉状态');
     }
 }
 
+// 关闭聊天窗口（如果打开）
+function closeChatWindowIfOpen() {
+    if (typeof require !== 'undefined') {
+        try {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.send('close-chat-window');
+        } catch (e) {
+            console.log('无法关闭聊天窗口:', e);
+        }
+    }
+}
+
 function switchToIdle() {
     if (window.desktopPet) {
+        closeChatWindowIfOpen(); // 如果聊天窗口打开，先关闭
         window.desktopPet.setState('idle');
         showNotification('💭 切换到待机状态');
     }
@@ -155,6 +169,7 @@ function switchToIdle() {
 
 function switchToExcited() {
     if (window.desktopPet) {
+        closeChatWindowIfOpen(); // 如果聊天窗口打开，先关闭
         window.desktopPet.setState('excited');
         showNotification('🎉 切换到兴奋状态');
     }
@@ -238,6 +253,17 @@ function hidePet() {
     }
 }
 
+function openChat() {
+    if (typeof require !== 'undefined') {
+        const { ipcRenderer } = require('electron');
+        console.log('打开聊天窗口');
+        ipcRenderer.send('open-chat-window');
+        showNotification('💬 聊天窗口已打开！');
+    } else {
+        console.error('require 不可用，无法打开聊天窗口');
+    }
+}
+
 function quitApp() {
     const confirmed = confirm('确定要退出桌面宠物吗？');
     if (confirmed) {
@@ -306,6 +332,12 @@ function handleDoubleClick() {
         const state = window.desktopPet.stateManager.getState();
         const currentState = state.currentState;
         
+        // 在聊天模式下，双击不切换状态
+        if (currentState === 'chatting') {
+            console.log('聊天模式下，双击被忽略');
+            return;
+        }
+        
         switch(currentState) {
             case 'idle':
                 window.desktopPet.setState('excited');
@@ -349,6 +381,36 @@ let petUI;
 
 document.addEventListener('DOMContentLoaded', () => {
     petUI = new PetUI();
+    
+    // 监听来自主进程的状态变更消息
+    if (typeof require !== 'undefined') {
+        const { ipcRenderer } = require('electron');
+        
+        // 接收来自聊天窗口的状态变更
+        ipcRenderer.on('change-pet-state', (event, state) => {
+            console.log('收到状态变更请求:', state);
+            if (window.desktopPet) {
+                window.desktopPet.setState(state);
+            }
+        });
+        
+        // 聊天窗口关闭时退出聊天模式
+        ipcRenderer.on('exit-chat-mode', () => {
+            console.log('聊天窗口已关闭，退出聊天模式');
+            if (window.desktopPet) {
+                const currentState = window.desktopPet.stateManager.getState();
+                if (currentState.currentState === 'chatting') {
+                    window.desktopPet.setState('idle');
+                }
+            }
+        });
+        
+        // 接收关闭聊天窗口的请求（从其他状态切换触发）
+        ipcRenderer.on('close-chat-window-request', () => {
+            console.log('收到关闭聊天窗口请求');
+            ipcRenderer.send('close-chat-window');
+        });
+    }
     
     // 为宠物添加双击事件
     const pet = document.getElementById('pet');
