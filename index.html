@@ -42,6 +42,8 @@
                 <li onclick="switchToExcited()">🎉 兴奋</li>
                 <li onclick="switchToSleeping()">😴 睡觉</li>
                 <li class="separator"></li>
+                <li onclick="window.voiceInteraction && window.voiceInteraction.toggle()">🎤 语音交互模式</li>
+                <li class="separator"></li>
                 <li onclick="checkEnergyStatus()">⚡ 能量</li>
                 <li onclick="wakeUpPet()">🐱 唤醒</li>
                 <li class="separator"></li>
@@ -60,5 +62,6 @@
     <script src="scripts/pet-animation-system.js"></script>
     <script src="scripts/pet-behavior.js"></script>
     <script src="scripts/pet-ui.js"></script>
+    <script src="scripts/pet-voice.js"></script>
 </body>
 </html>

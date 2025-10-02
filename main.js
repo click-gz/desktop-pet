@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } = require('electron');
+const { session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -171,7 +172,23 @@ function createTray() {
 }
 
 // 当 Electron 完成初始化时创建窗口
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  try {
+    const ses = session.defaultSession;
+    if (ses && typeof ses.setPermissionRequestHandler === 'function') {
+      ses.setPermissionRequestHandler((wc, permission, callback) => {
+        if (permission === 'media' || permission === 'audioCapture') {
+          return callback(true);
+        }
+        callback(false);
+      });
+    }
+  } catch (e) {
+    console.warn('设置媒体权限处理器失败:', e?.message || e);
+  }
+
+  createWindow();
+});
 
 // 当所有窗口关闭时退出应用 (macOS 除外)
 app.on('window-all-closed', () => {
@@ -259,5 +276,22 @@ ipcMain.on('hide-window', () => {
   if (mainWindow) {
     mainWindow.hide();
     console.log('接收到隐藏窗口信号，窗口已隐藏');
+  }
+});
+
+// 语音识别ASR文本打印
+ipcMain.on('voice-asr-text', (_event, payload) => {
+  try {
+    if (!payload) return;
+    const { text, isFinal } = typeof payload === 'string' ? { text: payload, isFinal: true } : payload;
+    if (typeof text === 'string' && text.trim().length > 0) {
+      if (isFinal) {
+        console.log(`[ASR] ${text}`);
+      } else {
+        console.log(`[ASR:partial] ${text}`);
+      }
+    }
+  } catch (e) {
+    console.warn('打印ASR文本失败:', e?.message || e);
   }
 });
