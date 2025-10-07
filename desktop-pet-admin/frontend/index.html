@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桌面宠物管理系统</title>
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="auth-section" class="auth-section">
+        <div class="auth-card">
+            <h2>🐱 桌面宠物管理系统</h2>
+            <p class="auth-subtitle">请输入管理员令牌登录</p>
+            
+            <div class="input-group">
+                <label for="admin-token">管理员令牌</label>
+                <input 
+                    type="password" 
+                    id="admin-token" 
+                    placeholder="请输入管理员令牌"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <button class="btn btn-primary btn-block" onclick="login()">
+                <span id="login-text">登录</span>
+                <span id="login-loading" class="hidden">登录中...</span>
+            </button>
+            
+            <p class="auth-hint">
+                默认令牌: <code>your_secret_admin_token_here</code>
+            </p>
+        </div>
+    </div>
+
+    <!-- 主面板 -->
+    <div id="main-panel" class="container hidden">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="header-left">
+                <h1>🐱 桌面宠物管理系统</h1>
+                <span class="header-subtitle">Redis 数据库管理</span>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline" onclick="refreshAll()">
+                    <span class="icon">🔄</span>
+                    刷新
+                </button>
+                <button class="btn btn-danger" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    退出
+                </button>
+            </div>
+        </header>
+
+        <!-- 统计卡片区域 -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-label">总用户数</div>
+                    <div class="stat-value" id="stat-users">-</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-content">
+                    <div class="stat-label">活跃会话</div>
+                    <div class="stat-value" id="stat-sessions">-</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📨</div>
+                <div class="stat-content">
+                    <div class="stat-label">总消息数</div>
+                    <div class="stat-value" id="stat-messages">-</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💾</div>
+                <div class="stat-content">
+                    <div class="stat-label">内存使用</div>
+                    <div class="stat-value stat-small" id="stat-memory">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 内容面板 -->
+        <main class="content-panel">
+            <!-- 标签页导航 -->
+            <nav class="tabs">
+                <button class="tab active" data-tab="users" onclick="switchTab('users')">
+                    <span class="tab-icon">👥</span>
+                    用户管理
+                </button>
+                <button class="tab" data-tab="sessions" onclick="switchTab('sessions')">
+                    <span class="tab-icon">💬</span>
+                    会话管理
+                </button>
+                <button class="tab" data-tab="system" onclick="switchTab('system')">
+                    <span class="tab-icon">⚙️</span>
+                    系统信息
+                </button>
+            </nav>
+
+            <!-- 用户管理标签 -->
+            <div id="tab-users" class="tab-content">
+                <div class="tab-header">
+                    <h3>用户列表</h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-sm btn-primary" onclick="refreshUsers()">
+                            刷新列表
+                        </button>
+                    </div>
+                </div>
+                <div id="users-table" class="table-container">
+                    <div class="loading">加载中...</div>
+                </div>
+                <div id="users-pagination" class="pagination"></div>
+            </div>
+
+            <!-- 会话管理标签 -->
+            <div id="tab-sessions" class="tab-content hidden">
+                <div class="tab-header">
+                    <h3>会话列表</h3>
+                    <div class="tab-actions">
+                        <select id="session-status-filter" onchange="filterSessions()">
+                            <option value="">全部状态</option>
+                            <option value="active">活跃</option>
+                            <option value="ended">已结束</option>
+                            <option value="summarized">已总结</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="refreshSessions()">
+                            刷新列表
+                        </button>
+                    </div>
+                </div>
+                <div id="sessions-table" class="table-container">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 系统信息标签 -->
+            <div id="tab-system" class="tab-content hidden">
+                <div class="tab-header">
+                    <h3>Redis 信息</h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-sm btn-warning" onclick="cleanupData()">
+                            清理过期数据
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmFlushDatabase()">
+                            清空数据库
+                        </button>
+                    </div>
+                </div>
+                <div id="redis-info" class="system-info">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()"></div>
+    <div id="modal-container" class="modal-container hidden"></div>
+
+    <!-- 加载配置和脚本 -->
+    <script src="config.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
+

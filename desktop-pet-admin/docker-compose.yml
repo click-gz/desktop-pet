@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 管理后台后端服务
+  admin-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: desktop-pet-admin-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - pet-admin-network
+
+  # Redis 服务（如果没有外部 Redis）
+  redis:
+    image: redis:7-alpine
+    container_name: desktop-pet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - pet-admin-network
+
+  # 前端 Nginx 服务（可选）
+  admin-frontend:
+    image: nginx:alpine
+    container_name: desktop-pet-admin-frontend
+    ports:
+      - "8000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - pet-admin-network
+
+volumes:
+  redis-data:
+
+networks:
+  pet-admin-network:
+    driver: bridge
+

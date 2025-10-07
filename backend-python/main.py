@@ -44,7 +44,16 @@ chat_service = ChatService()
 
 # 初始化 Redis 和用户画像服务
 redis_client = RedisManager.get_client()
-profile_service = UserProfileService(redis_client)
+
+# 🆕 初始化 LLM 分析器（用于画像深度分析）
+try:
+    from services.llm_enhanced_analyzer import LLMEnhancedAnalyzer
+    llm_analyzer = LLMEnhancedAnalyzer(chat_service.ai_provider)
+    profile_service = UserProfileService(redis_client, llm_analyzer)
+    print("✅ 用户画像服务已启用LLM深度分析")
+except Exception as e:
+    print(f"⚠️  LLM分析器加载失败，使用基础画像: {str(e)}")
+    profile_service = UserProfileService(redis_client)
 
 session_manager = SessionManager(redis_client)
 # 初始化后台任务管理器
@@ -283,26 +292,24 @@ async def send_message_stream(request: ChatRequest):
 
 
 
-# 使用 uvicorn 命令启动，不需要这段代码
-# 运行方式：uvicorn main:app --host 0.0.0.0 --port 3000
+# 支持两种启动方式：
+# 方式一：uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+# 方式二：python main.py（使用下面的代码）
 
-# 如果要用 python main.py 启动，取消下面的注释
-"""
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.getenv("PORT", 3000))
     host = os.getenv("HOST", "0.0.0.0")
     
     print("=" * 50)
     print("🚀 桌面宠物后端服务")
     print(f"📡 http://localhost:{port}")
+    print(f"📖 API文档: http://localhost:{port}/docs")
     print("=" * 50)
     
     uvicorn.run(
-        app,  # 直接传 app 对象
+        app,
         host=host,
         port=port,
         log_level="info"
     )
-"""
 

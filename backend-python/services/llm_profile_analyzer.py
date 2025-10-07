@@ -4,7 +4,7 @@ LLM用户画像分析器
 """
 
 import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 from services.ai_provider import AIProvider
 
 
@@ -14,8 +14,17 @@ class LLMProfileAnalyzer:
     def __init__(self):
         self.ai_provider = AIProvider()
     
-    async def summarize_session(self, context: List[Dict]) -> Dict:
-        """总结会话内容，提取关键信息"""
+    async def summarize_session(
+        self, 
+        context: List[Dict], 
+        previous_summary_context: Optional[str] = None
+    ) -> Dict:
+        """总结会话内容，提取关键信息（支持增量分析）
+        
+        Args:
+            context: 本次需要分析的对话列表
+            previous_summary_context: 上次总结的简要内容（用于理解连贯性）
+        """
         
         # 构建提示词
         conversation_text = ""
@@ -23,17 +32,28 @@ class LLMProfileAnalyzer:
             role_name = "用户" if msg["role"] == "user" else "AI助手"
             conversation_text += f"{role_name}: {msg['content']}\n"
         
-        analysis_prompt = f"""请分析以下对话，提取用户的关键信息：
+        # 添加历史上下文（如果存在）
+        context_section = ""
+        if previous_summary_context:
+            context_section = f"""【之前的对话总结】
+{previous_summary_context}
+
+注意：以上是之前对话的总结，请参考这些信息来理解本次对话的连贯性。
+
+"""
+        
+        analysis_prompt = f"""{context_section}请分析以下对话（本次新增内容），提取用户的关键信息：
 
 {conversation_text}
 
 请以JSON格式输出分析结果，包含以下字段：
-1. interests_mentioned: 对话中提到的用户兴趣爱好（列表）
+1. interests_mentioned: 对话中提到的用户兴趣爱好（列表，只包含本次新提到的）
 2. personality_hints: 用户性格特点的线索
 3. relationship_progress: 关系进展情况描述
-4. topics_discussed: 讨论的主要话题（列表）
+4. topics_discussed: 讨论的主要话题（列表，只包含本次讨论的）
 5. emotional_tone: 对话的情感基调
 
+重要：只需分析本次新增的对话内容，但可以参考之前的总结理解上下文连贯性。
 仅输出JSON，不要其他说明。"""
 
         try:

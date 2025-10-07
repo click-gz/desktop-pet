@@ -81,6 +81,7 @@ class PetChat {
                 "今天是 " + new Date().toLocaleDateString('zh-CN') + "！📅",
                 "现在是 " + new Date().toLocaleDateString('zh-CN') + "，" + ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][new Date().getDay()]
             ]
+            
         };
         
         // 关键词匹配规则（离线模式使用）
@@ -102,8 +103,21 @@ class PetChat {
         this.connectionStatusElement = null;
         this.statusDotElement = null;
         this.statusTextElement = null;
+        // 生成或获取用户唯一标识
+        this.userId = this.getOrCreateUserId();
     }
-    
+    getOrCreateUserId() {
+        // 从本地存储获取
+        let userId = localStorage.getItem('petUserId');
+        
+        if (!userId) {
+            // 生成新的用户ID（可以使用多种方式）
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('petUserId', userId);
+        }
+        
+        return userId;
+    }
     // 检查后端服务健康状态
     async checkBackendHealth() {
         try {
@@ -328,6 +342,7 @@ class PetChat {
                 },
                 body: JSON.stringify({
                     message: message,
+                    user_id: this.userId,
                     conversationHistory: this.conversationHistory.slice(0, -1) // 不包含刚添加的用户消息
                 })
             });

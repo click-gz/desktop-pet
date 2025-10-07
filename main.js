@@ -210,6 +210,20 @@ let moveThrottleTimeout = null;
 let pendingPosition = null;
 let lastSetPosition = null;
 
+const { machineId, machineIdSync } = require('node-machine-id');
+const os = require('os');
+
+// 生成机器唯一ID
+ipcMain.handle('get-machine-id', async () => {
+    try {
+        const id = await machineId();
+        return id;
+    } catch (error) {
+        // 降级方案：使用主机名 + 用户名
+        return `${os.hostname()}_${os.userInfo().username}`;
+    }
+});
+
 ipcMain.on('move-window', (event, x, y) => {
   if (mainWindow) {
     // 检查是否为重复位置，避免不必要的移动

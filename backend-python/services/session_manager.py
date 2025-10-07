@@ -135,6 +135,50 @@ class SessionManager:
         
         return [json.loads(msg) for msg in messages]
     
+    def get_new_session_context(self, session_id: str) -> List[Dict]:
+        """获取自上次总结后的新消息（增量）"""
+        session_key = f"session:{session_id}"
+        context_key = f"session:{session_id}:context"
+        
+        # 获取上次总结的位置
+        last_summarized = self.redis.hget(session_key, "last_summarized_message_count")
+        
+        if last_summarized:
+            # 有历史总结，只获取新消息
+            last_summarized_str = last_summarized.decode() if isinstance(last_summarized, bytes) else last_summarized
+            start_index = int(last_summarized_str)
+            messages = self.redis.lrange(context_key, start_index, -1)
+            print(f"  📊 增量总结：从第 {start_index} 条消息开始，共 {len(messages)} 条新消息")
+        else:
+            # 首次总结，获取全部消息
+            messages = self.redis.lrange(context_key, 0, -1)
+            print(f"  📊 首次总结：分析全部 {len(messages)} 条消息")
+        
+        return [json.loads(msg) for msg in messages]
+    
+    def get_last_summary_context(self, session_id: str) -> Optional[str]:
+        """获取上次总结的简要内容（用于提供上下文）"""
+        summary = self.get_session_summary(session_id)
+        if not summary:
+            return None
+        
+        # 提取关键信息作为上下文
+        context_parts = []
+        
+        interests = summary.get('interests_mentioned', [])
+        if interests and isinstance(interests, list):
+            context_parts.append(f"之前讨论的兴趣: {', '.join(interests[:5])}")
+        
+        topics = summary.get('topics_discussed', [])
+        if topics and isinstance(topics, list):
+            context_parts.append(f"之前的话题: {', '.join(topics[:5])}")
+        
+        relationship = summary.get('relationship_progress', '')
+        if relationship:
+            context_parts.append(f"关系进展: {relationship}")
+        
+        return "\n".join(context_parts) if context_parts else None
+    
     # ==================== 会话总结标记 ====================
     
     def mark_session_for_summary(self, session_id: str):
@@ -171,10 +215,16 @@ class SessionManager:
     def save_session_summary(self, session_id: str, summary: Dict):
         """保存会话总结"""
         summary_key = f"session:{session_id}:summary"
+        session_key = f"session:{session_id}"
+        context_key = f"session:{session_id}:context"
+        
+        # 获取当前消息数量，记录总结位置
+        current_message_count = self.redis.llen(context_key)
         
         summary_data = {
             **summary,
-            "summarized_at": datetime.now().isoformat()
+            "summarized_at": datetime.now().isoformat(),
+            "message_count_at_summary": current_message_count  # 记录总结时的消息数量
         }
         
         # 将嵌套字典转换为JSON字符串
@@ -188,8 +238,11 @@ class SessionManager:
         self.redis.hset(summary_key, mapping=flat_summary)
         self.redis.expire(summary_key, 30 * 24 * 3600)  # 保留30天
         
-        # 更新会话状态
-        self.redis.hset(f"session:{session_id}", "status", "summarized")
+        # 更新会话状态和最后总结位置
+        self.redis.hset(session_key, "status", "summarized")
+        self.redis.hset(session_key, "last_summarized_message_count", str(current_message_count))
+        
+        print(f"  ✅ 已记录总结位置: {current_message_count} 条消息")
     
     def get_session_summary(self, session_id: str) -> Optional[Dict]:
         """获取会话总结"""

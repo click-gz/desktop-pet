@@ -1,236 +1,419 @@
-# 🐱 桌面宠物 (Desktop Pet)
+# 🐱 桌面宠物系统 (Desktop Pet System)
 
-[![Electron](https://img.shields.io/badge/Electron-27.0.0-blue?logo=electron)](https://electronjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.19.0-green?logo=node.js)](https://nodejs.org/)
+[![Electron](https://img.shields.io/badge/Electron-28.0.0-blue?logo=electron)](https://electronjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Redis](https://img.shields.io/badge/Redis-5.0+-red?logo=redis)](https://redis.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)]()
 
-一个简单可爱的跨平台桌面宠物应用，使用 Electron 构建。陪伴你的工作时光！
+一个完整的智能桌面宠物系统，集成了AI聊天、用户画像、会话管理等高级功能。包含桌面客户端、后端服务和管理系统三大模块。
 
-## ✨ 功能特点
+## 🌟 项目概述
 
-### 🎮 基础交互
-- **三种状态**：待机、兴奋、睡觉
-- **智能移动**：兴奋状态下5秒无交互自动移动到鼠标位置
-- **状态切换**：点击宠物或右键菜单切换状态
-- **双击互动**：双击宠物根据当前状态智能切换
-- **丝滑拖拽**：基于 Pointer Events + rAF + IPC 的丝滑拖拽
-- **能量恢复**：点击宠物恢复1%能量，2秒冷却时间
+本项目由三个独立但互联的系统组成：
 
-### ⚡ 完善的能量系统 v2.0
-- **差异化消耗**：待机1小时耗尽，兴奋40分钟耗尽，睡眠不消耗
-- **移动消耗**：移动距离影响能量消耗（2%-5%）
-- **智能恢复**：睡眠状态每10秒恢复1%能量
-- **强制睡眠**：能量为0时强制进入睡眠
-- **视觉反馈**：5个能量等级，低能量时动作变慢、半透明
-- **详细状态**：显示消耗率和预计剩余时间
+### 1. 🎮 桌面宠物客户端 (Electron)
+- 可爱的桌面陪伴宠物
+- 透明悬浮窗口，不影响工作
+- AI智能对话，个性化回复
+- 丰富的动画和交互
 
-### 🎨 视觉效果
-- **可爱外观**：圆形彩色宠物精灵，支持状态颜色切换
-- **呼吸动画**：自然的呼吸效果，能量影响动画速度
-- **状态显示**：心情条、能量条和详细状态文字
-- **对话气泡**：宠物会说不同的话，支持能量状态提示
-- **睡眠指示器**："zzZ"动画指示器
+### 2. 🚀 后端AI服务 (Python + FastAPI)
+- 多AI服务提供商支持（OpenAI、硅基流动）
+- 用户画像智能分析
+- 会话管理与增量总结
+- Redis持久化存储
 
-### 🖥️ 桌面集成
-- **始终置顶**：在所有窗口前端显示
-- **透明背景**：无边框透明窗口，融入桌面
-- **系统托盘**：完整的托盘集成，多种恢复方式
-- **紧凑菜单**：优化的右键菜单，支持滚动和紧凑设计
-- **中文支持**：完美支持中文显示，无乱码问题
+### 3. 🎨 管理系统 (Web)
+- 完整的用户画像展示
+- 实时数据统计
+- 会话监控与管理
+- Redis数据库管理
+
+## ✨ 核心功能
+
+### 🤖 AI对话系统
+- **智能回复**：基于用户画像的个性化对话
+- **上下文记忆**：记住历史对话，连贯交流
+- **多模型支持**：OpenAI GPT、硅基流动 Qwen
+- **流式输出**：实时显示AI回复内容
+
+### 👤 用户画像系统（统一版）
+完整的五层画像结构：
+
+1. **基础属性层**
+   - 年龄段、性别、职业、教育程度
+   - 智能推断，置信度评分
+
+2. **兴趣偏好层**
+   - 自动识别兴趣标签（带权重）
+   - 内容偏好分析
+   - 活跃时段统计
+
+3. **心理特征层**
+   - 大五人格分析
+   - 情感状态追踪
+   - 沟通风格识别
+
+4. **社交关系层**
+   - AI亲密度系统（陌生人 → 挚友）
+   - 信任度、互动舒适度
+   - 互动模式分析
+
+5. **统计信息**
+   - 互动次数、会话数、消息数
+   - 注册天数、活跃度
+
+### 💬 会话管理
+- **智能分段**：自动检测对话主题变化
+- **增量总结**：只总结新内容，合并历史
+- **后台处理**：异步执行，不阻塞交互
+- **上下文优化**：智能压缩，减少token消耗
+
+### 📊 管理功能
+- **用户管理**：查看、编辑、删除用户
+- **画像刷新**：手动触发画像更新
+- **会话监控**：实时查看对话内容
+- **数据统计**：系统运行状态监控
+- **Redis管理**：数据清理、导出等
+
+## 🏗️ 系统架构
+
+```
+┌─────────────────┐
+│   桌面宠物客户端   │ (Electron + JavaScript)
+│   - 可爱UI界面    │
+│   - 用户交互      │
+└────────┬────────┘
+         │ HTTP/WebSocket
+         ▼
+┌─────────────────┐       ┌──────────┐
+│   后端AI服务     │  TCP  │  Redis   │
+│   (FastAPI)     │◄─────►│  数据库   │
+│   - AI对话      │       └──────────┘
+│   - 用户画像     │              ▲
+│   - 会话管理     │              │
+└────────┬────────┘              │
+         │                       │
+         ▼                       │
+┌─────────────────┐              │
+│   管理系统       │  HTTP        │
+│   (Web)         │──────────────┘
+│   - 数据可视化   │
+│   - 用户管理     │
+└─────────────────┘
+```
 
 ## 🚀 快速开始
 
 ### 环境要求
 
-- **Node.js**: >= 16.0.0 (推荐 22.19.0)
-- **npm**: >= 7.0.0
-- **操作系统**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
+#### 通用依赖
+- **Redis**: >= 5.0（数据存储）
+- **Git**: 用于克隆项目
+
+#### 桌面客户端
+- **Node.js**: >= 16.0.0
+
+#### 后端服务
+- **Python**: >= 3.8
+- **AI API**: OpenAI 或硅基流动 API Key
 
 ### 安装步骤
 
-1. **克隆项目**
+#### 1. 克隆项目
+
 ```bash
 git clone https://github.com/your-username/desktop-pet.git
 cd desktop-pet
 ```
 
-2. **安装依赖**
+#### 2. 启动 Redis
+
 ```bash
-npm install
+# Windows (WSL)
+wsl redis-server
+
+# macOS
+brew services start redis
+
+# Linux
+sudo systemctl start redis
 ```
 
-3. **运行应用**
+#### 3. 配置并启动后端服务
+
 ```bash
+cd backend-python
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 配置环境变量
+cp env.example .env
+# 编辑 .env 文件，填入你的 API Key
+
+# 启动服务
+uvicorn main:app --host 0.0.0.0 --port 3000
+```
+
+后端服务将运行在 `http://localhost:3000`
+
+#### 4. 启动桌面客户端
+
+```bash
+cd ..  # 回到项目根目录
+
+# 安装依赖
+npm install
+
+# 启动应用
 npm start
 ```
 
-## 📚 使用指南
+#### 5.（可选）启动管理系统
 
-### 基本操作
+```bash
+cd desktop-pet-admin/backend
 
-| 操作 | 描述 | 效果 |
-|------|------|------|
-| 单击宠物 | 基础互动 | 随机显示对话气泡，恢复1%能量 |
-| 双击宠物 | 智能切换 | 根据当前状态自动切换 |
-| 右键宠物 | 打开菜单 | 显示状态切换和功能菜单 |
-| 拖拽宠物 | 移动位置 | 平滑拖动宠物到新位置 |
-| 悬停宠物 | 查看状态 | 显示详细状态信息 |
-| 系统托盘 | 显示/隐藏 | 单击、双击或右键菜单恢复 |
+# 安装依赖
+pip install -r requirements.txt
 
-### 宠物状态详解
+# 配置环境变量
+cp ../env.example ../.env
+# 编辑 .env 文件，设置管理员令牌
 
-#### 💭 待机状态 (Idle)
-- **特征**: 平静的呼吸动画，粉红色外观
-- **能量消耗**: 1小时耗尽（慢速消耗）
-- **行为**: 随机显示对话，等待互动
-- **转换**: 可切换到兴奋或睡觉状态
+# 启动后端
+python main.py
+```
 
-#### 🎉 兴奋状态 (Excited)
-- **特征**: 快速动画，黄橙色外观
-- **能量消耗**: 40分钟耗尽（中速消耗）
-- **特殊行为**: 5秒无交互自动移动到鼠标位置
-- **行为**: 表达开心情绪，显示兴奋消息
-- **触发**: 点击互加、双击切换时
+管理后端运行在 `http://localhost:8080`
 
-#### 😴 睡觉状态 (Sleeping)
-- **特征**: 缓慢呼吸，绿色外观，显示"zzZ..."
-- **能量消耗**: 不消耗能量，每10秒恢复1%
-- **行为**: 表示休息状态，不响应交互
-- **触发**: 手动切换、能量耗尽强制或双击唤醒
+打开 `desktop-pet-admin/frontend/index.html` 访问管理界面。
 
-### 右键菜单功能
+## 📖 详细文档
 
-- **💭 待机** - 切换到待机模式
-- **🎉 兴奋** - 切换到兴奋模式
-- **😴 睡觉** - 切换到睡觉模式
-- **⚡ 能量** - 查看详细能量状态信息
-- **🐱 唤醒** - 强制唤醒睡眠中的宠物
-- **📅 信息** - 显示详细的系统信息
-- **👁️ 隐藏** - 隐藏宠物窗口（可通过托盘恢复）
-- **❌ 退出** - 退出应用
+### 各模块详细说明
 
-### 状态显示
+- **[桌面客户端文档](FRONTEND_README.md)** - Electron应用使用指南
+- **[后端服务文档](backend-python/README.md)** - API文档和配置说明
+- **[管理系统文档](desktop-pet-admin/README.md)** - 管理后台使用指南
+- **[用户画像系统](backend-python/USER_PROFILE_README.md)** - 画像系统详细说明
+- **[增量总结文档](backend-python/INCREMENTAL_SUMMARY_UPGRADE.md)** - 会话总结功能
 
-- **心情条**: 显示宠物当前心情，颜色从红色到蓝色
-- **能量条**: 显示当前能量百分比，5个等级显示
-- **状态文字**: 显示当前状态、心情百分比和能量百分比
-- **能量消耗显示**: 实时显示消耗率和预计剩余时间
-- **低能量警告**: 能量低于15%时视觉提示
+### API文档
 
-## 🛠️ 开发指南
+启动相应服务后访问：
+- **后端API**: http://localhost:3000/docs
+- **管理API**: http://localhost:8080/docs
 
-### 项目结构
+## 🎯 使用场景
+
+### 日常陪伴
+- 桌面宠物陪伴工作学习
+- 聊天解闷，缓解压力
+- 可爱动画，赏心悦目
+
+### 智能助手
+- AI问答，解决问题
+- 个性化对话，了解你的喜好
+- 记忆功能，延续上下文
+
+### 数据分析
+- 用户行为分析
+- 兴趣偏好洞察
+- 互动模式研究
+
+## 🔧 配置说明
+
+### 后端服务配置 (backend-python/.env)
+
+```env
+# AI服务（至少配置一个）
+SILICONFLOW_API_KEY=your_api_key_here
+SILICONFLOW_MODEL=Qwen/Qwen3-8B
+
+# 或使用 OpenAI
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-3.5-turbo
+
+# Redis配置
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+
+# 服务器配置
+PORT=3000
+HOST=0.0.0.0
+```
+
+### 管理系统配置 (desktop-pet-admin/.env)
+
+```env
+# Redis配置（与后端共享）
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+
+# 管理员认证
+ADMIN_TOKEN=your_secret_token
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+
+# 服务器配置
+SERVER_PORT=8080
+```
+
+### 前端配置
+
+桌面客户端自动连接到 `http://localhost:3000`
+管理系统前端通过 `frontend/config.js` 配置API地址。
+
+## 📁 项目结构
 
 ```
 desktop-pet/
-├── package.json          # 项目配置和依赖
-├── main.js              # Electron 主进程
-├── index.html           # 宠物界面HTML
-├── README.md            # 项目文档
-├── styles/              # 样式文件
-│   └── pet.css         # 宠物样式
-└── scripts/             # JavaScript文件
-    ├── pet-behavior.js  # 宠物行为逻辑
-    └── pet-ui.js       # 用户界面交互
-```
-
-### 开发命令
-
-```bash
-# 开发模式（带调试工具）
-npm run dev
-
-# 生产模式运行
-npm start
-
-# 构建可分发版本
-npm run build
-```
-
-### 核心架构
-
-#### 主进程 (main.js)
-- 创建无边框透明窗口
-- 处理系统托盘集成（多种图标加载方案）
-- 管理窗口移动和IPC通信
-- 全局鼠标位置获取和窗口隐藏/显示
-- 处理应用生命周期和中文编码支持
-
-#### 渲染进程 (scripts/)
-- **pet-behavior.js**: 完善的宠物行为系统、能量系统 v2.0、状态管理
-- **pet-ui.js**: 用户交互、右键菜单处理、隐藏功能
-- **pet.css**: 视觉样式、动画定义、紧凑菜单设计
-
-### 技术特点
-
-- **GPU硬件加速**: 使用CSS3 transform和will-change优化性能
-- **丝滑拖拽**: Pointer Events + requestAnimationFrame + IPC，低延迟、无卡顿
-- **无残影渲染**: 通过GPU合成层避免拖拽残影问题
-- **事件优化**: 防抖和节流机制确保交互流畅
-- **智能移动**: 基于鼠标跟踪的自动移动系统
-- **能量管理**: 完善的能量消耗和恢复机制
-- **跨平台兼容**: 支持Windows/macOS/Linux三大平台
-- **中文支持**: 完美支持中文显示，无乱码问题
-
-## 🔧 配置选项
-
-### 外观自定义
-
-在 `styles/pet.css` 中可以修改：
-
-```css
-/* 宠物大小 */
-#pet {
-    width: 100px;      /* 宠物宽度 */
-    height: 100px;     /* 宠物高度 */
-}
-
-/* 颜色主题 */
-.pet-sprite {
-    background: radial-gradient(circle, #ff9999 20%, #ff6b6b 40%, #ee5a24 60%);
-}
-```
-
-## 📦 打包分发
-
-### 构建可执行文件
-
-```bash
-# 为当前平台构建
-npm run build
-
-# 为特定平台构建
-npx electron-builder --win
-npx electron-builder --mac
-npx electron-builder --linux
+├── README.md                      # 本文档（总体说明）
+├── FRONTEND_README.md             # 前端详细文档
+├── package.json                   # 前端依赖
+├── main.js                        # Electron主进程
+├── index.html                     # 宠物界面
+├── chat.html                      # 聊天窗口
+├── scripts/                       # 前端脚本
+│   ├── pet-animation-system.js
+│   ├── pet-behavior.js
+│   ├── pet-chat.js
+│   └── ...
+├── styles/                        # 样式文件
+│   ├── pet.css
+│   └── chat.css
+│
+├── backend-python/                # 后端服务
+│   ├── README.md                 # 后端详细文档
+│   ├── main.py                   # FastAPI应用
+│   ├── requirements.txt          # Python依赖
+│   ├── services/                 # 业务服务
+│   │   ├── ai_provider.py
+│   │   ├── chat_service.py
+│   │   ├── user_profile_service.py
+│   │   ├── session_manager.py
+│   │   └── background_tasks.py
+│   └── ...
+│
+└── desktop-pet-admin/            # 管理系统
+    ├── README.md                 # 管理系统文档
+    ├── backend/                  # 管理后端
+    │   ├── main.py
+    │   ├── api/
+    │   └── services/
+    ├── frontend/                 # 管理前端
+    │   ├── index.html
+    │   ├── assets/
+    │   └── config.js
+    └── ...
 ```
 
 ## 🐛 故障排除
 
 ### 常见问题
 
-**Q: 托盘图标不显示？**
-A: 项目已优化图标加载机制，支持ICO/PNG多种格式。确保系统托盘设置允许显示图标。
-
-**Q: 拖拽不够流畅？**
-A: 现已采用 Pointer Events + rAF + 主进程 IPC 的方案，默认即为60fps丝滑拖拽。请关闭系统级屏幕录制/高负载程序，并确保显卡驱动为最新。
-
-**Q: 中文显示乱码？**
-A: 项目已修复中文编码问题，在package.json中使用了UTF-8编码设置。
-
-**Q: 宠物不移动到鼠标位置？**
-A: 需要进入兴奋状态后等待5秒，确保能量充足（>3%）。
-
-**Q: 隐藏功能失效？**
-A: 可通过系统托盘的单击、双击或右键菜单恢复显示。
-
-**Q: 应用无法启动？**
-A: 检查Node.js版本是否符合要求，尝试重新安装依赖：
+#### Q: Redis连接失败？
+**A:** 确保Redis服务正在运行：
 ```bash
-rm -rf node_modules package-lock.json
-npm install
+redis-cli ping  # 应返回 PONG
 ```
+
+#### Q: AI API调用失败？
+**A:** 检查以下几点：
+1. `.env` 文件中API Key是否正确
+2. API Key是否有余额
+3. 网络是否能访问AI服务
+4. 查看后端日志的具体错误
+
+#### Q: 桌面宠物无法连接后端？
+**A:**
+1. 确认后端服务已启动（访问 http://localhost:3000/health）
+2. 检查防火墙设置
+3. 查看浏览器控制台的网络请求错误
+
+#### Q: 管理系统无法登录？
+**A:**
+1. 确认管理后端已启动（端口8080）
+2. 检查 `.env` 中的 `ADMIN_TOKEN` 配置
+3. 确认Redis连接正常
+
+#### Q: 用户画像不更新？
+**A:**
+1. 确认已有足够的对话消息（至少2条）
+2. 后台任务每30秒执行一次，需要等待
+3. 可通过管理系统手动刷新画像
+4. 检查后端日志查看更新状态
+
+### 调试技巧
+
+**后端服务调试**:
+```bash
+# 启用详细日志
+uvicorn main:app --log-level debug
+
+# 使用 curl 测试 API
+curl http://localhost:3000/health
+```
+
+**Electron应用调试**:
+```javascript
+// 在 main.js 中开启开发者工具
+mainWindow.webContents.openDevTools();
+```
+
+**Redis数据查看**:
+```bash
+# 连接Redis
+redis-cli
+
+# 查看所有用户
+KEYS user:*:profile
+
+# 查看特定用户画像
+HGETALL user:{user_id}:profile
+```
+
+## 🔄 更新日志
+
+### v2.1.0 (2025-10-07)
+- ✨ **统一用户画像系统**：整合所有画像数据到统一视图
+- 🔄 **画像自动更新**：后台任务自动分析用户画像
+- 🎯 **手动刷新功能**：管理员可手动触发画像更新
+- 🐛 **修复更新bug**：修复画像更新时间计算错误
+- 📊 **优化更新策略**：降低更新限制，提高更新频率
+
+### v2.0.0 (2025-10-07)
+- ✨ 新增用户画像系统（五层结构）
+- ✨ 新增增量总结功能
+- ✨ 新增会话管理系统
+- ✨ 新增管理系统
+- 🚀 支持硅基流动AI服务
+- 🤖 多AI服务提供商故障转移
+
+### v1.0.0 (2025-09-01)
+- 🎉 初始版本发布
+- 🐱 桌面宠物基础功能
+- 💬 AI聊天功能
+- 📡 FastAPI后端
+
+## 🛣️ 路线图
+
+### 短期计划
+- [ ] 语音交互功能
+- [ ] 更多宠物形象选择
+- [ ] 插件系统支持
+- [ ] 多语言支持
+
+### 长期计划
+- [ ] 移动端适配
+- [ ] 多宠物互动
+- [ ] 社区分享平台
+- [ ] 宠物养成系统
 
 ## 🤝 贡献指南
 
@@ -243,46 +426,35 @@ npm install
 5. 开启 Pull Request
 
 ### 代码规范
-
-- 使用2空格缩进
-- 函数和变量使用驼峰命名
-- 添加适当的注释
-- 保持代码简洁易读
+- Python: 遵循 PEP 8
+- JavaScript: 使用 ESLint
+- 添加适当的注释和文档
+- 编写单元测试
 
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 📞 联系方式
+## 📞 技术支持
 
-- **项目主页**: [GitHub Repository](https://github.com/your-username/desktop-pet)
-- **问题反馈**: [Issues](https://github.com/your-username/desktop-pet/issues)
+- **问题反馈**: [GitHub Issues](https://github.com/your-username/desktop-pet/issues)
+- **功能建议**: 欢迎提交 Issue 或 PR
+- **API文档**: 
+  - 后端: http://localhost:3000/docs
+  - 管理: http://localhost:8080/docs
 
 ## 🙏 致谢
 
 - [Electron](https://electronjs.org/) - 跨平台桌面应用框架
-- [Node.js](https://nodejs.org/) - JavaScript运行时环境
+- [FastAPI](https://fastapi.tiangolo.com/) - 现代Python Web框架
+- [Redis](https://redis.io/) - 高性能数据存储
+- [OpenAI](https://openai.com/) - AI服务提供商
+- [硅基流动](https://siliconflow.cn/) - 国内AI服务
 
-## 🔍 更新日志
+## 🌟 Star History
 
-### v2.1 (2025-09-24)
-- ⚡ 丝滑拖拽：移除 electron-drag，改为 Pointer Events + rAF + IPC
-- 🧭 拖拽边界：根据屏幕尺寸自动限制窗口位置
-- 🧹 拖拽清理：指针捕获、样式状态与动画恢复更可靠
-
-### v2.0 (2024-12-18)
-- ✨ 完善的能量系统 v2.0：差异化消耗、移动消耗、智能恢复
-- ✨ 智能移动功能：兴奋状态下5秒无交互自动移动到鼠标位置
-- 🖥️ 全局鼠标位置获取，支持跨屏幕移动
-- 🎨 状态颜色系统：待机粉红、兴奋黄橙、睡眠绿色
-- ⚡ 能量等级显示：5个等级，低能量视觉反馈
-- 😴 睡眠指示器："zzZ"动画效果
-- 🔄 拖拽性能优化：节流机制，60fps更新
-- 📱 紧凑菜单设计：滚动支持，防止截断
-- 👁️ 完善隐藏功能：支持托盘恢复
-- 🌏 中文编码优化：解决Windows中文乱码问题
-- 🖼️ 托盘图标优化：多种格式支持，增强兼容性
+如果这个项目对你有帮助，请给个Star⭐️支持一下！
 
 ---
 
-**享受与你的桌面宠物相处的时光吧！** 🐱💭
+**让智能的桌面宠物陪伴你的每一天！** 🐱✨💬
