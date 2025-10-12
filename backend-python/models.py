@@ -3,7 +3,7 @@
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 
 class Message(BaseModel):
@@ -30,4 +30,16 @@ class ChatResponse(BaseModel):
     success: bool = Field(..., description="是否成功")
     reply: str = Field(..., description="AI 回复")
     timestamp: str = Field(..., description="时间戳")
+
+
+class BehaviorData(BaseModel):
+    """单条行为数据"""
+    user_id: str = Field(default="default", description="用户ID")
+    behavior_type: str = Field(..., description="行为类型")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="行为元数据")
+
+
+class BehaviorBatchRequest(BaseModel):
+    """批量行为记录请求"""
+    behaviors: List[Dict[str, Any]] = Field(..., description="行为列表")
 

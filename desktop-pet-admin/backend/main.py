@@ -9,7 +9,7 @@ import uvicorn
 
 from config import config
 from services.redis_service import RedisService
-from api import admin, auth
+from api import admin, auth, pet
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -32,6 +32,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(pet.router)
 
 
 @app.on_event("startup")

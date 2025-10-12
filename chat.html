@@ -17,7 +17,15 @@
                     <span class="status-text">检查中...</span>
                 </span>
             </div>
-            <button class="close-button" onclick="closeChat()">✕</button>
+            <div class="header-buttons">
+                <button class="icon-button" onclick="toggleHistory()" title="历史记录">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                        <path d="M12 6v6l4 2" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button class="close-button" onclick="closeChat()">✕</button>
+            </div>
         </div>
         
         <div class="chat-messages" id="chat-messages">
@@ -52,6 +60,22 @@
         </div>
     </div>
     
+    <!-- 历史记录侧边栏 -->
+    <div class="history-sidebar" id="history-sidebar">
+        <div class="history-header">
+            <h3>💬 聊天历史</h3>
+            <button class="close-history-btn" onclick="toggleHistory()">✕</button>
+        </div>
+        <div class="history-content" id="history-content">
+            <div class="history-empty">暂无历史记录</div>
+        </div>
+    </div>
+    
+    <!-- 历史记录遮罩层 -->
+    <div class="history-overlay" id="history-overlay" onclick="toggleHistory()"></div>
+    
+    <!-- 🎯 行为追踪系统 -->
+    <script src="scripts/pet-behavior-tracker.js"></script>
     <script src="scripts/pet-chat.js"></script>
 </body>
 </html>

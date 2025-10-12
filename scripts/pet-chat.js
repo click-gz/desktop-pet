@@ -7,10 +7,21 @@ class PetChat {
         
         // 后端 API 配置
         this.apiBaseUrl = 'http://localhost:3000';
-        this.conversationHistory = []; // 对话历史
+        this.conversationHistory = []; // 当前会话的对话历史
+        
+        // 会话管理
+        this.currentSessionId = this.createNewSession();
+        this.currentSessionMessages = []; // 当前会话的消息列表
+        
+        // 🎯 启动聊天会话追踪
+        if (window.behaviorTracker) {
+            window.behaviorTracker.startChatSession();
+            console.log('💬 聊天会话追踪已启动');
+        }
         
         this.setupEventListeners();
-        this.loadChatHistory();
+        // 不再自动加载历史记录，每次打开都是新会话
+        // this.loadChatHistory(); // 注释掉
         this.notifyPetChatting(); // 通知主窗口进入聊天状态
         this.checkBackendHealth(); // 检查后端连接
         
@@ -117,6 +128,79 @@ class PetChat {
         }
         
         return userId;
+    }
+    
+    // 创建新会话
+    createNewSession() {
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const session = {
+            id: sessionId,
+            startTime: new Date().toISOString(),
+            messages: []
+        };
+        
+        console.log('📝 创建新会话:', sessionId);
+        return sessionId;
+    }
+    
+    // 保存当前会话到历史
+    saveCurrentSessionToHistory() {
+        if (this.currentSessionMessages.length === 0) {
+            return; // 没有消息，不保存
+        }
+        
+        const session = {
+            id: this.currentSessionId,
+            startTime: new Date().toISOString(),
+            messages: this.currentSessionMessages,
+            messageCount: this.currentSessionMessages.length
+        };
+        
+        // 获取现有历史
+        let history = this.getChatHistory();
+        
+        // 添加当前会话
+        history.unshift(session); // 新会话放在最前面
+        
+        // 只保留最近30个会话
+        history = history.slice(0, 30);
+        
+        // 保存到 localStorage
+        localStorage.setItem('petChatSessionHistory', JSON.stringify(history));
+        
+        console.log('💾 会话已保存到历史:', session.id, '消息数:', session.messageCount);
+    }
+    
+    // 获取聊天历史（所有会话）
+    getChatHistory() {
+        try {
+            const history = localStorage.getItem('petChatSessionHistory');
+            return history ? JSON.parse(history) : [];
+        } catch (e) {
+            console.error('读取历史记录失败:', e);
+            return [];
+        }
+    }
+    
+    // 加载指定会话的消息到界面
+    loadSessionMessages(sessionId) {
+        const history = this.getChatHistory();
+        const session = history.find(s => s.id === sessionId);
+        
+        if (!session) {
+            console.warn('会话不存在:', sessionId);
+            return;
+        }
+        
+        // 清空当前界面
+        this.messagesContainer.innerHTML = '';
+        
+        // 重新添加会话消息
+        session.messages.forEach(msg => {
+            this.addMessageWithTime(msg.text, msg.sender, msg.time);
+        });
+        
+        console.log('📂 已加载会话:', sessionId);
     }
     // 检查后端服务健康状态
     async checkBackendHealth() {
@@ -259,6 +343,11 @@ class PetChat {
         // 窗口关闭时停止心跳
         window.addEventListener('beforeunload', () => {
             this.stopHeartbeat();
+            // 🎯 结束聊天会话追踪
+            if (window.behaviorTracker) {
+                window.behaviorTracker.endChatSession();
+                console.log('💬 聊天会话追踪已结束');
+            }
         });
     }
     
@@ -277,6 +366,11 @@ class PetChat {
     async sendMessage() {
         const message = this.inputField.value.trim();
         if (!message) return;
+        
+        // 🎯 追踪用户消息
+        if (window.behaviorTracker) {
+            window.behaviorTracker.trackChatMessage('user');
+        }
         
         // 添加用户消息
         this.addMessage(message, 'user');
@@ -307,6 +401,11 @@ class PetChat {
             
             this.hideTypingIndicator();
             this.addMessage(reply, 'bot');
+            
+            // 🎯 追踪AI回复
+            if (window.behaviorTracker) {
+                window.behaviorTracker.trackChatMessage('assistant');
+            }
             
             // 添加AI回复到历史
             this.conversationHistory.push({
@@ -387,6 +486,11 @@ class PetChat {
     }
     
     addMessage(text, sender) {
+        const time = new Date().toLocaleTimeString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}-message`;
         
@@ -403,10 +507,7 @@ class PetChat {
         
         const timeDiv = document.createElement('div');
         timeDiv.className = 'message-time';
-        timeDiv.textContent = new Date().toLocaleTimeString('zh-CN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        timeDiv.textContent = time;
         
         contentDiv.appendChild(textDiv);
         contentDiv.appendChild(timeDiv);
@@ -415,6 +516,14 @@ class PetChat {
         messageDiv.appendChild(contentDiv);
         
         this.messagesContainer.appendChild(messageDiv);
+        
+        // 保存到当前会话
+        this.currentSessionMessages.push({
+            text: text,
+            sender: sender,
+            time: time,
+            timestamp: new Date().toISOString()
+        });
         
         // 滚动到底部
         this.scrollToBottom();
@@ -456,43 +565,8 @@ class PetChat {
     }
     
     saveChatHistory() {
-        const messages = Array.from(this.messagesContainer.children)
-            .filter(msg => !msg.id || msg.id !== 'typing-indicator')
-            .map(msg => ({
-                text: msg.querySelector('.message-text')?.textContent || '',
-                sender: msg.classList.contains('user-message') ? 'user' : 'bot',
-                time: msg.querySelector('.message-time')?.textContent || ''
-            }));
-        
-        localStorage.setItem('petChatHistory', JSON.stringify(messages.slice(-50))); // 只保存最近50条
-    }
-    
-    loadChatHistory() {
-        const history = localStorage.getItem('petChatHistory');
-        if (!history) return;
-        
-        try {
-            const messages = JSON.parse(history);
-            // 清空现有消息（除了欢迎消息）
-            this.messagesContainer.innerHTML = '';
-            
-            // 重新添加历史消息
-            messages.forEach(msg => {
-                this.addMessageWithTime(msg.text, msg.sender, msg.time);
-            });
-            
-            // 恢复对话历史到内存
-            this.conversationHistory = messages
-                .filter(msg => msg.sender === 'user' || msg.sender === 'bot')
-                .map(msg => ({
-                    role: msg.sender === 'user' ? 'user' : 'assistant',
-                    content: msg.text
-                }))
-                .slice(-20); // 只保留最近20条
-                
-        } catch (e) {
-            console.error('加载聊天历史失败:', e);
-        }
+        // 保存当前会话到历史
+        this.saveCurrentSessionToHistory();
     }
     
     addMessageWithTime(text, sender, time) {
@@ -522,6 +596,144 @@ class PetChat {
         
         this.messagesContainer.appendChild(messageDiv);
     }
+    
+    // 渲染历史记录列表
+    renderHistoryList() {
+        const history = this.getChatHistory();
+        const historyContent = document.getElementById('history-content');
+        
+        if (history.length === 0) {
+            historyContent.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+            return;
+        }
+        
+        let html = '<div class="history-list">';
+        
+        history.forEach(session => {
+            const date = new Date(session.startTime);
+            const dateStr = this.formatDate(date);
+            const timeStr = date.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // 获取会话预览（第一条用户消息）
+            const firstUserMsg = session.messages.find(m => m.sender === 'user');
+            const preview = firstUserMsg ? firstUserMsg.text : '无消息';
+            const previewShort = preview.length > 30 ? preview.substring(0, 30) + '...' : preview;
+            
+            html += `
+                <div class="history-item" onclick="viewHistorySession('${session.id}')">
+                    <div class="history-item-header">
+                        <span class="history-date">${dateStr} ${timeStr}</span>
+                        <button class="history-delete-btn" onclick="deleteHistorySession('${session.id}', event)" title="删除">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="history-preview">${previewShort}</div>
+                    <div class="history-meta">
+                        <span class="history-message-count">💬 ${session.messageCount} 条消息</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        historyContent.innerHTML = html;
+    }
+    
+    // 格式化日期
+    formatDate(date) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        if (targetDate.getTime() === today.getTime()) {
+            return '今天';
+        } else if (targetDate.getTime() === yesterday.getTime()) {
+            return '昨天';
+        } else if (now - date < 7 * 24 * 60 * 60 * 1000) {
+            const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            return days[date.getDay()];
+        } else {
+            return date.toLocaleDateString('zh-CN', { 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
+        }
+    }
+    
+    // 查看历史会话详情
+    viewHistorySessionDetail(sessionId) {
+        const history = this.getChatHistory();
+        const session = history.find(s => s.id === sessionId);
+        
+        if (!session) {
+            console.warn('会话不存在:', sessionId);
+            return;
+        }
+        
+        // 创建详情视图
+        const detailView = document.createElement('div');
+        detailView.id = 'session-detail-view';
+        detailView.className = 'session-detail-view';
+        
+        const date = new Date(session.startTime);
+        const dateStr = date.toLocaleDateString('zh-CN', { 
+            year: 'numeric',
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        let messagesHtml = '';
+        session.messages.forEach(msg => {
+            const senderClass = msg.sender === 'user' ? 'user-message' : 'bot-message';
+            const avatar = msg.sender === 'bot' ? '🐱' : '👤';
+            messagesHtml += `
+                <div class="message ${senderClass}">
+                    <div class="message-avatar">${avatar}</div>
+                    <div class="message-content">
+                        <div class="message-text">${msg.text}</div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        detailView.innerHTML = `
+            <div class="session-detail-header">
+                <div>
+                    <h3>会话详情</h3>
+                    <p class="session-detail-date">${dateStr} · ${session.messageCount} 条消息</p>
+                </div>
+                <button class="close-detail-btn" onclick="closeSessionDetail()">✕</button>
+            </div>
+            <div class="session-detail-messages">
+                ${messagesHtml}
+            </div>
+        `;
+        
+        document.body.appendChild(detailView);
+    }
+    
+    // 删除会话
+    deleteSession(sessionId) {
+        let history = this.getChatHistory();
+        history = history.filter(s => s.id !== sessionId);
+        
+        localStorage.setItem('petChatSessionHistory', JSON.stringify(history));
+        
+        console.log('🗑️ 会话已删除:', sessionId);
+        
+        // 刷新历史列表
+        this.renderHistoryList();
+    }
 }
 
 // 全局函数
@@ -540,6 +752,11 @@ function sendQuickMessage(message) {
 }
 
 function closeChat() {
+    // 在关闭前保存当前会话
+    if (window.petChat) {
+        window.petChat.saveChatHistory();
+    }
+    
     if (typeof require !== 'undefined') {
         const { ipcRenderer } = require('electron');
         // 通知主窗口退出聊天状态
@@ -547,6 +764,50 @@ function closeChat() {
         ipcRenderer.send('close-chat-window');
     } else {
         window.close();
+    }
+}
+
+// 切换历史记录侧边栏
+function toggleHistory() {
+    const sidebar = document.getElementById('history-sidebar');
+    const overlay = document.getElementById('history-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        // 加载历史记录
+        if (window.petChat) {
+            window.petChat.renderHistoryList();
+        }
+    }
+}
+
+// 查看某个历史会话
+function viewHistorySession(sessionId) {
+    if (window.petChat) {
+        window.petChat.viewHistorySessionDetail(sessionId);
+    }
+}
+
+// 删除历史会话
+function deleteHistorySession(sessionId, event) {
+    event.stopPropagation(); // 阻止事件冒泡
+    
+    if (confirm('确定要删除这个会话记录吗？')) {
+        if (window.petChat) {
+            window.petChat.deleteSession(sessionId);
+        }
+    }
+}
+
+// 关闭会话详情
+function closeSessionDetail() {
+    const detailView = document.getElementById('session-detail-view');
+    if (detailView) {
+        detailView.remove();
     }
 }
 

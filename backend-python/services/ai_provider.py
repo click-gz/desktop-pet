@@ -91,14 +91,23 @@ class AIProvider:
         if not self.providers:
             raise Exception("未配置任何 AI 服务，请检查环境变量")
         
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            *conversation_history,
-            {"role": "user", "content": message}
-        ]
+        # 检查 conversation_history 是否已包含 system prompt
+        has_system_prompt = any(msg.get("role") == "system" for msg in conversation_history)
         
-        # 限制历史消息数量（保留系统提示 + 最近10条）
-        limited_messages = [messages[0]] + messages[-11:]
+        messages = []
+        
+        # 如果历史中没有 system prompt，添加默认的
+        if not has_system_prompt:
+            messages.append({"role": "system", "content": SYSTEM_PROMPT})
+        
+        # 添加对话历史和当前消息
+        messages.extend(conversation_history)
+        messages.append({"role": "user", "content": message})
+        
+        # 限制历史消息数量（保留前面的 system prompts + 最近10条消息）
+        system_messages = [msg for msg in messages if msg.get("role") == "system"]
+        other_messages = [msg for msg in messages if msg.get("role") != "system"]
+        limited_messages = system_messages + other_messages[-11:]
         
         # 按优先级尝试每个提供商
         for provider in self.providers:

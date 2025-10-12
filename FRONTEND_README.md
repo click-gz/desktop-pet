@@ -20,6 +20,16 @@
 - **个性化回复**：基于用户画像定制回复
 - **表情反馈**：根据对话内容展示不同表情
 
+### 🎯 用户行为追踪
+- **自动追踪**：记录所有用户交互行为
+  - 点击宠物次数和位置
+  - 拖拽距离和时长
+  - 状态切换和偏好
+  - 聊天会话和时长
+- **性能优化**：完全异步，不阻塞交互（<1ms延迟）
+- **批量发送**：智能缓存，减少网络请求
+- **隐私保护**：数据仅存储在本地
+
 ### 🎨 界面设计
 - **现代 UI**：简洁美观的聊天界面
 - **响应式布局**：自适应不同屏幕尺寸
@@ -91,6 +101,7 @@ desktop-pet/
 ├── scripts/                   # 前端脚本
 │   ├── pet-animation-system.js   # 动画系统
 │   ├── pet-behavior.js           # 行为逻辑
+│   ├── pet-behavior-tracker.js   # 🆕 行为追踪
 │   ├── pet-chat.js               # 聊天功能
 │   ├── pet-state-manager.js      # 状态管理
 │   ├── pet-ui.js                 # UI 交互
@@ -183,6 +194,41 @@ async function sendMessage(message) {
 - 首次使用自动生成唯一ID
 - 存储在本地，保持用户画像连续性
 - 支持多用户切换（规划中）
+
+### 行为追踪系统（新增）
+
+**自动追踪机制**:
+```javascript
+// 行为追踪器会自动记录所有交互
+window.behaviorTracker = new BehaviorTracker();
+
+// 点击追踪
+pet.addEventListener('click', () => {
+  behaviorTracker.trackClick({
+    petState: currentState,
+    position: { x, y }
+  });
+});
+
+// 拖拽追踪
+behaviorTracker.trackDrag(startPos, endPos, duration);
+
+// 聊天追踪
+behaviorTracker.startChatSession();
+behaviorTracker.trackChatMessage('user');
+behaviorTracker.endChatSession();
+```
+
+**批量发送优化**:
+- 缓存最多5条行为数据
+- 每10秒自动发送一次
+- 页面关闭前发送剩余数据
+- 发送失败自动重试
+
+**性能特点**:
+- ✅ 完全异步，不阻塞UI
+- ✅ 用户感知延迟 <1ms
+- ✅ 自动容错和重试
 
 ## ⚙️ 配置选项
 

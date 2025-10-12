@@ -142,6 +142,10 @@ function switchTab(tabName) {
     
     // 加载数据
     if (tabName === 'users') refreshUsers();
+    else if (tabName === 'pet') {
+        refreshPetConfig();
+        loadPetStats();
+    }
     else if (tabName === 'sessions') refreshSessions();
     else if (tabName === 'system') loadRedisInfo();
 }
@@ -747,4 +751,126 @@ function refreshAll() {
 
 // 页面卸载时停止自动刷新
 window.addEventListener('beforeunload', stopAutoRefresh);
+
+// ==================== 宠物配置管理 ====================
+
+async function refreshPetConfig() {
+    try {
+        const response = await fetch(`${window.CONFIG.API_BASE_URL}/api/pet/config?token=${adminToken}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const config = result.data;
+            
+            // 填充表单
+            document.getElementById('pet-name').value = config.pet_name || '';
+            document.getElementById('pet-personality').value = config.personality || '';
+            document.getElementById('pet-greeting').value = config.greeting_message || '';
+            document.getElementById('pet-system-prompt').value = config.system_prompt || '';
+            document.getElementById('pet-avatar-style').value = config.avatar_style || 'cat';
+            document.getElementById('pet-voice-enabled').checked = config.voice_enabled || false;
+            
+            showNotification('配置已加载', 'success');
+        }
+    } catch (error) {
+        showNotification('加载配置失败: ' + error.message, 'error');
+    }
+}
+
+async function savePetConfig() {
+    try {
+        // 获取表单数据
+        const petName = document.getElementById('pet-name').value.trim();
+        const personality = document.getElementById('pet-personality').value.trim();
+        const greeting = document.getElementById('pet-greeting').value.trim();
+        const systemPrompt = document.getElementById('pet-system-prompt').value.trim();
+        const avatarStyle = document.getElementById('pet-avatar-style').value;
+        const voiceEnabled = document.getElementById('pet-voice-enabled').checked;
+        
+        // 验证必填字段
+        if (!petName) {
+            showNotification('请输入宠物名称', 'error');
+            return;
+        }
+        
+        if (!systemPrompt) {
+            showNotification('请输入 System Prompt', 'error');
+            return;
+        }
+        
+        // 构建更新数据
+        const updateData = {
+            pet_name: petName,
+            personality: personality,
+            greeting_message: greeting,
+            system_prompt: systemPrompt,
+            avatar_style: avatarStyle,
+            voice_enabled: voiceEnabled
+        };
+        
+        // 发送更新请求
+        const response = await fetch(
+            `${window.CONFIG.API_BASE_URL}/api/pet/config?token=${adminToken}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            }
+        );
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ 配置保存成功！', 'success');
+            await loadPetStats(); // 重新加载统计信息
+        } else {
+            showNotification('保存失败: ' + (result.message || '未知错误'), 'error');
+        }
+    } catch (error) {
+        showNotification('保存失败: ' + error.message, 'error');
+    }
+}
+
+async function resetPetConfig() {
+    if (!confirm('确定要重置为默认配置吗？当前配置将丢失！')) return;
+    
+    try {
+        const response = await fetch(
+            `${window.CONFIG.API_BASE_URL}/api/pet/config/reset?token=${adminToken}`,
+            { method: 'POST' }
+        );
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ 已重置为默认配置', 'success');
+            await refreshPetConfig();
+            await loadPetStats();
+        }
+    } catch (error) {
+        showNotification('重置失败: ' + error.message, 'error');
+    }
+}
+
+async function loadPetStats() {
+    try {
+        const response = await fetch(`${window.CONFIG.API_BASE_URL}/api/pet/stats?token=${adminToken}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.data;
+            
+            // 更新统计数据
+            document.getElementById('pet-stat-interactions').textContent = stats.total_interactions || 0;
+            document.getElementById('pet-stat-users').textContent = stats.unique_users || 0;
+            document.getElementById('pet-stat-sessions').textContent = stats.total_sessions || 0;
+            document.getElementById('pet-stat-updated').textContent = stats.config_last_updated 
+                ? formatDate(stats.config_last_updated) 
+                : '从未更新';
+        }
+    } catch (error) {
+        console.error('加载统计失败:', error);
+    }
+}
 

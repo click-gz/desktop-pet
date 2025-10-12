@@ -11,13 +11,14 @@ import uvicorn
 import os
 from datetime import datetime
 
-from models import ChatRequest, ChatResponse
+from models import ChatRequest, ChatResponse, BehaviorBatchRequest
 from services.chat_service import ChatService
 from services.ai_provider import AIProvider
 from services.redis_manager import RedisManager
 from services.user_profile_service import UserProfileService
 from services.session_manager import SessionManager
 from services.background_tasks import BackgroundTaskManager, task_manager as bg_task_manager
+from services.behavior_analyzer import behavior_analyzer
 
 
 # 加载环境变量
@@ -136,16 +137,41 @@ async def send_message(request: ChatRequest):
             for msg in session_context[:-1]  # 排除刚添加的用户消息
         ]
         
+        # 🆕 获取宠物配置的 System Prompt
+        pet_system_prompt = redis_client.get("pet:config:system_prompt")
+        if pet_system_prompt:
+            pet_system_prompt = pet_system_prompt.decode('utf-8') if isinstance(pet_system_prompt, bytes) else pet_system_prompt
+        else:
+            # 默认 System Prompt
+            pet_system_prompt = "你是一个可爱的桌面宠物，名叫小猫咪。你性格活泼开朗，喜欢和用户互动聊天。回复要简短、可爱、有趣，适当使用表情符号。"
+        
+        # 获取宠物名称
+        pet_name = redis_client.get("pet:config:name")
+        if pet_name:
+            pet_name = pet_name.decode('utf-8') if isinstance(pet_name, bytes) else pet_name
+        else:
+            pet_name = "小猫咪"
+        
         # 获取个性化上下文（基于长期画像）
         context_prompt = profile_service.get_chat_context_prompt(user_id)
         
         # 构建增强的对话历史
         enhanced_history = []
+        
+        # 1. 首先添加宠物的基础 System Prompt
+        enhanced_history.append({
+            "role": "system",
+            "content": f"{pet_system_prompt}\n\n你的名字是：{pet_name}"
+        })
+        
+        # 2. 然后添加用户画像上下文（如果有）
         if context_prompt:
             enhanced_history.append({
                 "role": "system",
-                "content": context_prompt
+                "content": f"【用户画像参考】\n{context_prompt}"
             })
+        
+        # 3. 最后添加对话历史
         enhanced_history.extend(conversation_history)
         
         # 调用AI服务
@@ -288,6 +314,161 @@ async def send_message_stream(request: ChatRequest):
     except Exception as e:
         print(f"流式聊天错误: {str(e)}")
         raise HTTPException(status_code=500, detail="发生错误")
+
+
+# ==================== 行为追踪API ====================
+
+@app.post("/api/behavior")
+async def record_behavior(
+    user_id: str = "default",
+    behavior_type: str = None,
+    metadata: dict = None
+):
+    """记录单个用户行为"""
+    try:
+        if not behavior_type:
+            raise HTTPException(status_code=400, detail="行为类型不能为空")
+        
+        uid = profile_service.get_user_id(user_id)
+        profile_service.record_behavior(uid, behavior_type, metadata or {})
+        
+        return {
+            "success": True,
+            "message": "行为已记录",
+            "behavior_type": behavior_type
+        }
+    except Exception as e:
+        print(f"记录行为失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="记录行为失败")
+
+
+@app.post("/api/behaviors/batch")
+async def record_behaviors_batch(request: BehaviorBatchRequest):
+    """批量记录用户行为"""
+    try:
+        behaviors = request.behaviors
+        
+        if not behaviors:
+            raise HTTPException(status_code=400, detail="行为列表不能为空")
+        
+        recorded_count = 0
+        for behavior in behaviors:
+            try:
+                user_id = behavior.get('user_id', 'default')
+                behavior_type = behavior.get('behavior_type')
+                metadata = behavior.get('metadata', {})
+                
+                if behavior_type:
+                    uid = profile_service.get_user_id(user_id)
+                    profile_service.record_behavior(uid, behavior_type, metadata)
+                    recorded_count += 1
+            except Exception as e:
+                print(f"记录单个行为失败: {str(e)}")
+                continue
+        
+        print(f"✅ 批量记录了 {recorded_count}/{len(behaviors)} 条行为")
+        
+        return {
+            "success": True,
+            "message": f"成功记录 {recorded_count} 条行为",
+            "total": len(behaviors),
+            "recorded": recorded_count
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"批量记录行为失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="批量记录行为失败")
+
+
+@app.get("/api/behavior/analysis/{user_id}")
+async def get_behavior_analysis(user_id: str = "default"):
+    """获取用户行为分析"""
+    try:
+        uid = profile_service.get_user_id(user_id)
+        
+        # 获取用户行为数据
+        behavior_key = f"user:{uid}:behaviors"
+        behaviors_raw = redis_client.lrange(behavior_key, 0, -1)
+        
+        if not behaviors_raw:
+            return {
+                "success": True,
+                "user_id": user_id,
+                "analysis": {
+                    "total_behaviors": 0,
+                    "message": "暂无行为数据"
+                }
+            }
+        
+        # 解析行为数据
+        import json
+        behaviors = []
+        for b in behaviors_raw:
+            try:
+                behavior = json.loads(b)
+                behaviors.append(behavior)
+            except:
+                continue
+        
+        # 使用行为分析器生成分析报告
+        analysis = behavior_analyzer.generate_behavior_summary(behaviors)
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "analysis": analysis
+        }
+    except Exception as e:
+        print(f"行为分析失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="行为分析失败")
+
+
+@app.get("/api/behavior/stats/{user_id}")
+async def get_behavior_stats(user_id: str = "default"):
+    """获取用户行为统计（简化版）"""
+    try:
+        uid = profile_service.get_user_id(user_id)
+        
+        # 获取用户行为数据
+        behavior_key = f"user:{uid}:behaviors"
+        behaviors_raw = redis_client.lrange(behavior_key, 0, -1)
+        
+        if not behaviors_raw:
+            return {
+                "success": True,
+                "user_id": user_id,
+                "stats": {
+                    "total_behaviors": 0,
+                    "behavior_types": {}
+                }
+            }
+        
+        # 统计行为类型
+        import json
+        from collections import Counter
+        behavior_types = []
+        for b in behaviors_raw:
+            try:
+                behavior = json.loads(b)
+                behavior_types.append(behavior.get('type', 'unknown'))
+            except:
+                continue
+        
+        type_counter = Counter(behavior_types)
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "stats": {
+                "total_behaviors": len(behavior_types),
+                "behavior_types": dict(type_counter),
+                "most_common": type_counter.most_common(5)
+            }
+        }
+    except Exception as e:
+        print(f"获取行为统计失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取行为统计失败")
 
 
 

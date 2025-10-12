@@ -409,6 +409,9 @@ class UserProfileService:
         if not basic_profile:
             return {}
         
+        # 🆕 获取行为数据并分析
+        behavior_analysis = self._analyze_user_behaviors(user_id)
+        
         # 构建统一的完整画像摘要
         summary = {
             "user_id": user_id,
@@ -419,13 +422,15 @@ class UserProfileService:
                 "interest_tags": {},
                 "tags": basic_profile.get("interests", []),
                 "content_preferences": {},
-                "peak_active_hours": []
+                "peak_active_hours": behavior_analysis.get("time_patterns", {}).get("peak_hours", [])
             },
             "psychological": {
                 "personality_traits": basic_profile.get("personality_traits", {}),
                 "communication_style": {},
                 "emotional_state": {},
-                "big_five_personality": {}
+                "big_five_personality": {},
+                # 🆕 添加行为推断的性格特征
+                "behavior_personality": behavior_analysis.get("personality_traits", {})
             },
             "social": {
                 "ai_relationship": {
@@ -434,14 +439,16 @@ class UserProfileService:
                     "trust_level": 0,
                     "interaction_comfort": 0
                 },
-                "interaction_patterns": {}
+                "interaction_patterns": behavior_analysis.get("interaction_patterns", {})
             },
             "statistics": {
                 "total_interactions": int(basic_profile.get("total_interactions", 0)),
                 "total_messages": 0,
                 "total_sessions": 0,
                 "days_since_registration": 0
-            }
+            },
+            # 🆕 添加行为统计
+            "behavior_analysis": behavior_analysis
         }
         
         # 读取所有增强数据
@@ -519,3 +526,37 @@ class UserProfileService:
             print(f"读取增强数据失败: {str(e)}")
         
         return summary
+    
+    def _analyze_user_behaviors(self, user_id: str) -> Dict[str, Any]:
+        """分析用户行为数据"""
+        try:
+            # 导入行为分析器
+            from services.behavior_analyzer import behavior_analyzer
+            
+            # 获取用户行为数据
+            behavior_key = f"user:{user_id}:behaviors"
+            behaviors_raw = self.redis.lrange(behavior_key, 0, -1)
+            
+            if not behaviors_raw:
+                return {
+                    "total_behaviors": 0,
+                    "message": "暂无行为数据"
+                }
+            
+            # 解析行为数据
+            behaviors = []
+            for b in behaviors_raw:
+                try:
+                    behavior = json.loads(b)
+                    behaviors.append(behavior)
+                except:
+                    continue
+            
+            # 使用行为分析器生成完整分析
+            analysis = behavior_analyzer.generate_behavior_summary(behaviors)
+            
+            return analysis
+            
+        except Exception as e:
+            print(f"行为分析失败: {str(e)}")
+            return {}

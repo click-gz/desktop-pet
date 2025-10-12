@@ -16,9 +16,17 @@
 
 ### 👤 用户画像系统
 - **自动画像构建**: 基于聊天内容自动分析用户兴趣、性格
+- **行为追踪分析**: 🆕 追踪用户交互行为，推断性格特征
 - **亲密度系统**: 跟踪用户互动频率，建立情感连接
 - **个性化回复**: 根据用户画像定制 AI 回复风格
 - **长期记忆**: 持久化存储用户偏好和历史互动
+
+### 🎯 行为追踪系统（新增）
+- **自动追踪**: 点击、拖拽、聊天、状态切换等所有交互
+- **智能分析**: 交互模式、性格特征、时间规律、参与度评分
+- **异步处理**: 完全异步，不阻塞用户交互（<1ms延迟）
+- **批量优化**: 自动批量发送，减少90%网络请求
+- **隐私保护**: 数据仅存储在本地Redis
 
 ### 💬 会话管理
 - **智能会话分段**: 自动检测对话主题变化
@@ -212,6 +220,64 @@ POST /api/session/{session_id}/end
 GET /api/session/{session_id}/summary
 ```
 
+### 行为追踪 API（新增）
+
+#### 7. 批量记录行为
+```http
+POST /api/behaviors/batch
+Content-Type: application/json
+
+{
+  "behaviors": [
+    {
+      "user_id": "default",
+      "behavior_type": "pet_click",
+      "metadata": {
+        "petState": "idle",
+        "timestamp": "2025-10-12T14:00:00Z"
+      }
+    }
+  ]
+}
+```
+
+#### 8. 获取行为分析
+```http
+GET /api/behavior/analysis/{user_id}
+```
+
+**响应示例：**
+```json
+{
+  "success": true,
+  "analysis": {
+    "interaction_patterns": {
+      "total_interactions": 50,
+      "interaction_level": "高",
+      "interaction_style": "聊天型"
+    },
+    "personality_traits": {
+      "外向性": "高",
+      "社交需求": "高",
+      "使用习惯": "活跃用户"
+    },
+    "time_patterns": {
+      "peak_hours": [18, 19, 20],
+      "time_pattern": "夜猫子型"
+    },
+    "engagement": {
+      "score": 75.5,
+      "level": "高"
+    }
+  }
+}
+```
+
+#### 9. 获取行为统计
+```http
+GET /api/behavior/stats/{user_id}
+```
+
 ### 完整 API 文档
 
 启动服务后访问 **http://localhost:3000/docs** 查看完整的交互式 API 文档。
@@ -273,6 +339,7 @@ backend-python/
 │   ├── redis_manager.py            # Redis 连接管理
 │   ├── session_manager.py          # 会话管理（增量总结）
 │   ├── user_profile_service.py     # 用户画像服务
+│   ├── behavior_analyzer.py        # 🆕 行为分析服务
 │   └── background_tasks.py         # 后台任务管理器
 ├── test_incremental_summary.py     # 增量总结测试
 ├── INCREMENTAL_SUMMARY_UPGRADE.md  # 增量总结升级文档
@@ -290,8 +357,25 @@ backend-python/
 - **性格特征**: 分析对话风格，识别性格倾向
 - **互动统计**: 消息数量、会话次数、互动频率
 - **亲密度等级**: 陌生人 → 熟人 → 朋友 → 密友 → 挚友
+- **行为分析**: 🆕 基于交互行为推断用户习惯和性格
 
 查看详细文档: [USER_PROFILE_README.md](USER_PROFILE_README.md)
+
+### 行为追踪系统（新增）
+
+追踪和分析用户的所有交互行为：
+
+- **追踪类型**: 点击、拖拽、状态切换、聊天会话、活跃时段
+- **分析维度**: 
+  - 交互模式（频率、类型分布、风格）
+  - 性格特征（外向性、控制欲、社交需求）
+  - 时间模式（高峰时段、使用习惯）
+  - 参与度评分（0-100分综合评估）
+- **技术特点**: 
+  - 完全异步，不阻塞交互
+  - 批量发送，优化性能
+  - 容错机制，数据不丢失
+  - 隐私保护，本地存储
 
 ### 增量总结系统
 
@@ -378,6 +462,25 @@ curl -X POST http://localhost:3000/api/chat/message \
 ```
 
 ## 🔄 更新日志
+
+### v2.3.0 (2025-10-12) 🆕
+- ✨ **用户行为追踪系统**
+  - 自动追踪所有用户交互行为
+  - 智能分析交互模式和性格特征
+  - 识别活跃时段和使用习惯
+  - 参与度评分系统（0-100分）
+  - 新增 `behavior_analyzer.py` 服务
+- 🔧 **API扩展**
+  - `POST /api/behaviors/batch` - 批量记录行为
+  - `GET /api/behavior/analysis/{user_id}` - 获取完整分析
+  - `GET /api/behavior/stats/{user_id}` - 获取行为统计
+- 📊 **画像系统增强**
+  - 基于行为的性格推断
+  - 时间模式识别
+  - 互动风格分类
+- 🐛 **Bug修复**
+  - 修复 Pydantic 模型验证问题
+  - 优化异步性能
 
 ### v2.0.0 (2025-10-07)
 - ✨ 新增用户画像系统

@@ -67,6 +67,11 @@ class DesktopPet {
     onStateChange(newState, oldState) {
         console.log(`宠物状态改变: ${oldState} -> ${newState}`);
         
+        // 🎯 追踪状态切换行为
+        if (window.behaviorTracker && oldState !== newState) {
+            window.behaviorTracker.trackStateChange(oldState, newState, 'manual');
+        }
+        
         // 更新CSS类
         this.pet.className = `pet ${newState}`;
         
@@ -165,6 +170,9 @@ class DesktopPet {
         let startWindow = { x: 0, y: 0 };
         let pendingPos = { x: 0, y: 0 };
         const windowSize = { w: 250, h: 250 }; // 与主窗口一致
+        // 🎯 拖拽追踪数据
+        let dragStartTime = 0;
+        let dragStartPos = { x: 0, y: 0 };
         
         function onPointerDown(e) {
             // 仅左键或触摸
@@ -175,6 +183,9 @@ class DesktopPet {
             const isChatting = currentState.currentState === 'chatting';
             
             dragging = true;
+            
+            // 🎯 记录拖拽开始时间和位置
+            dragStartTime = Date.now();
             
             // 更新状态管理器（聊天模式下不更新状态）
             self.stateManager.updateState({
@@ -203,9 +214,14 @@ class DesktopPet {
                 const state = self.stateManager.getState();
                 startWindow.x = state.position.x || 0;
                 startWindow.y = state.position.y || 0;
+                // 🎯 记录拖拽起始位置
+                dragStartPos.x = startWindow.x;
+                dragStartPos.y = startWindow.y;
             } else {
                 startWindow.x = 0;
                 startWindow.y = 0;
+                dragStartPos.x = 0;
+                dragStartPos.y = 0;
             }
             
             pendingPos.x = startWindow.x;
@@ -251,6 +267,19 @@ class DesktopPet {
         function endDrag() {
             if (!dragging) return;
             dragging = false;
+            
+            // 🎯 追踪拖拽行为
+            if (window.behaviorTracker && dragStartTime > 0) {
+                const duration = Date.now() - dragStartTime;
+                const state = self.stateManager.getState();
+                const endPos = state.position || pendingPos;
+                
+                window.behaviorTracker.trackDrag(
+                    dragStartPos,
+                    endPos,
+                    duration
+                );
+            }
             
             // 更新状态管理器
             self.stateManager.updateState({
@@ -496,6 +525,15 @@ class DesktopPet {
         if (currentState.currentState === 'chatting') {
             console.log('聊天模式下，点击交互被忽略');
             return;
+        }
+        
+        // 🎯 追踪点击行为
+        if (window.behaviorTracker) {
+            window.behaviorTracker.trackClick({
+                petState: currentState.currentState,
+                mood: currentState.mood,
+                energy: currentState.energy
+            });
         }
         
         // 更新心情

@@ -97,6 +97,10 @@
                     <span class="tab-icon">👥</span>
                     用户管理
                 </button>
+                <button class="tab" data-tab="pet" onclick="switchTab('pet')">
+                    <span class="tab-icon">🐱</span>
+                    宠物配置
+                </button>
                 <button class="tab" data-tab="sessions" onclick="switchTab('sessions')">
                     <span class="tab-icon">💬</span>
                     会话管理
@@ -121,6 +125,158 @@
                     <div class="loading">加载中...</div>
                 </div>
                 <div id="users-pagination" class="pagination"></div>
+            </div>
+
+            <!-- 宠物配置标签 -->
+            <div id="tab-pet" class="tab-content hidden">
+                <div class="tab-header">
+                    <h3>🐱 宠物配置管理</h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-sm btn-success" onclick="savePetConfig()">
+                            💾 保存配置
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="resetPetConfig()">
+                            🔄 重置默认
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="refreshPetConfig()">
+                            刷新
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="pet-config-container">
+                    <!-- 基本信息卡片 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <h4>📝 基本信息</h4>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="form-group">
+                                <label for="pet-name">宠物名称</label>
+                                <input 
+                                    type="text" 
+                                    id="pet-name" 
+                                    class="form-control" 
+                                    placeholder="例如：小猫咪"
+                                    maxlength="20"
+                                >
+                                <small class="form-hint">给你的桌面宠物起个可爱的名字吧！</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="pet-personality">性格特点</label>
+                                <input 
+                                    type="text" 
+                                    id="pet-personality" 
+                                    class="form-control" 
+                                    placeholder="例如：活泼可爱、温柔体贴"
+                                    maxlength="50"
+                                >
+                                <small class="form-hint">描述宠物的性格特征</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="pet-greeting">欢迎消息</label>
+                                <input 
+                                    type="text" 
+                                    id="pet-greeting" 
+                                    class="form-control" 
+                                    placeholder="例如：喵~ 我是你的桌面宠物！"
+                                    maxlength="100"
+                                >
+                                <small class="form-hint">用户首次打开时的问候语</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Prompt 卡片 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <h4>🤖 System Prompt</h4>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="form-group">
+                                <label for="pet-system-prompt">AI 系统提示词</label>
+                                <textarea 
+                                    id="pet-system-prompt" 
+                                    class="form-control form-textarea" 
+                                    rows="8"
+                                    placeholder="定义宠物的AI行为和回复风格..."
+                                ></textarea>
+                                <small class="form-hint">
+                                    这段文字会告诉AI如何扮演你的桌面宠物，包括性格、说话方式、兴趣爱好等。
+                                    <br>建议包含：角色定位、性格特点、说话风格、互动方式等。
+                                </small>
+                            </div>
+                            
+                            <div class="prompt-examples">
+                                <div class="prompt-example">
+                                    <strong>示例模板：</strong>
+                                    <code>
+                                        你是一个可爱的桌面宠物，名叫{宠物名}。你性格{性格特点}，
+                                        喜欢和用户互动聊天。回复要简短、可爱、有趣，适当使用表情符号。
+                                        你会关心用户的心情，在用户需要时给予鼓励和陪伴。
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 外观设置卡片 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <h4>🎨 外观设置</h4>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="form-group">
+                                <label for="pet-avatar-style">头像风格</label>
+                                <select id="pet-avatar-style" class="form-control">
+                                    <option value="cat">猫咪 🐱</option>
+                                    <option value="dog">小狗 🐶</option>
+                                    <option value="rabbit">兔子 🐰</option>
+                                    <option value="bear">小熊 🐻</option>
+                                    <option value="fox">狐狸 🦊</option>
+                                </select>
+                                <small class="form-hint">选择宠物的外观形象</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="pet-voice-enabled">
+                                    启用语音功能
+                                </label>
+                                <small class="form-hint">允许宠物使用语音与用户交互</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 统计信息卡片 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <h4>📊 宠物统计</h4>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="pet-stats-grid">
+                                <div class="pet-stat-item">
+                                    <div class="pet-stat-label">总互动次数</div>
+                                    <div class="pet-stat-value" id="pet-stat-interactions">-</div>
+                                </div>
+                                <div class="pet-stat-item">
+                                    <div class="pet-stat-label">服务用户数</div>
+                                    <div class="pet-stat-value" id="pet-stat-users">-</div>
+                                </div>
+                                <div class="pet-stat-item">
+                                    <div class="pet-stat-label">总会话数</div>
+                                    <div class="pet-stat-value" id="pet-stat-sessions">-</div>
+                                </div>
+                                <div class="pet-stat-item">
+                                    <div class="pet-stat-label">最后更新</div>
+                                    <div class="pet-stat-value small" id="pet-stat-updated">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 会话管理标签 -->
